@@ -26,68 +26,32 @@ if (!$produkt) {
 
 // Prüfe ob dieses Produkt ein Hauptprodukt mit Varianten ist
 $varianten = [];
-$varianten_gruppen = [];
+$aktuelle_variante_id = $id;
 
 // Wenn das Produkt kein parent_id hat, könnte es ein Hauptprodukt sein
 if (!$produkt['parent_id']) {
-    // Lade alle Varianten dieses Hauptprodukts
-    $varianten = db_fetch_all("SELECT p.id, p.artikelnummer, p.preis, p.preis_netto, p.lagerbestand,
-        GROUP_CONCAT(CONCAT(vg.name, ':', vw.wert) SEPARATOR '||') as optionen
-        FROM produkte p
-        LEFT JOIN produkt_varianten pv ON pv.produkt_id = p.id
-        LEFT JOIN varianten_werte vw ON pv.wert_id = vw.id
-        LEFT JOIN varianten_gruppen vg ON vw.gruppe_id = vg.id
-        WHERE p.parent_id = $id AND p.aktiv = 1
-        GROUP BY p.id
-        ORDER BY p.preis ASC");
-    
-    // Ermittle die verfügbaren Gruppen und deren Werte
-    if (!empty($varianten)) {
-        foreach ($varianten as $var) {
-            if (!empty($var['optionen'])) {
-                $opts = explode('||', $var['optionen']);
-                foreach ($opts as $opt) {
-                    list($grp, $wrt) = explode(':', $opt);
-                    if (!isset($varianten_gruppen[$grp])) {
-                        $varianten_gruppen[$grp] = [];
-                    }
-                    if (!in_array($wrt, $varianten_gruppen[$grp])) {
-                        $varianten_gruppen[$grp][] = $wrt;
-                    }
-                }
-            }
-        }
-    }
+    // Lade alle Varianten dieses Hauptprodukts (über parent_id)
+    $varianten = db_fetch_all("SELECT id, artikelnummer, name, preis, preis_netto, lagerbestand, optionen_text
+        FROM produkte 
+        WHERE parent_id = $id AND aktiv = 1
+        ORDER BY preis ASC");
 }
 
-// Wenn dieses Produkt selbst eine Variante ist, lade auch die anderen Varianten des Parents
+// Wenn dieses Produkt selbst eine Variante ist, lade Parent + alle Geschwister
 if ($produkt['parent_id']) {
     $parent_id = (int)$produkt['parent_id'];
-    $varianten = db_fetch_all("SELECT p.id, p.artikelnummer, p.preis, p.preis_netto, p.lagerbestand,
-        GROUP_CONCAT(CONCAT(vg.name, ':', vw.wert) SEPARATOR '||') as optionen
-        FROM produkte p
-        LEFT JOIN produkt_varianten pv ON pv.produkt_id = p.id
-        LEFT JOIN varianten_werte vw ON pv.wert_id = vw.id
-        LEFT JOIN varianten_gruppen vg ON vw.gruppe_id = vg.id
-        WHERE (p.parent_id = $parent_id OR p.id = $parent_id) AND p.aktiv = 1
-        GROUP BY p.id
-        ORDER BY p.preis ASC");
+    $aktuelle_variante_id = $id;
+    
+    // Lade alle Varianten inkl. dieser
+    $varianten = db_fetch_all("SELECT id, artikelnummer, name, preis, preis_netto, lagerbestand, optionen_text
+        FROM produkte 
+        WHERE parent_id = $parent_id AND aktiv = 1
+        ORDER BY preis ASC");
         
-    foreach ($varianten as $var) {
-        if (!empty($var['optionen'])) {
-            $opts = explode('||', $var['optionen']);
-            foreach ($opts as $opt) {
-                if (strpos($opt, ':') !== false) {
-                    list($grp, $wrt) = explode(':', $opt);
-                    if (!isset($varianten_gruppen[$grp])) {
-                        $varianten_gruppen[$grp] = [];
-                    }
-                    if (!in_array($wrt, $varianten_gruppen[$grp])) {
-                        $varianten_gruppen[$grp][] = $wrt;
-                    }
-                }
-            }
-        }
+    // Lade auch das Parent-Produkt für Name/Beschreibung
+    $parent = db_fetch_row("SELECT * FROM produkte WHERE id = $parent_id");
+    if ($parent && empty($produkt['beschreibung'])) {
+        $produkt['beschreibung'] = $parent['beschreibung'];
     }
 }
 
@@ -251,25 +215,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
             <!-- Warenkorb-Formular -->
             <form method="post" class="warenkorb-form">
                 
-                <?php if (!empty($varianten_gruppen)): ?>
+                <?php if (!empty($varianten)): ?>
                 <!-- Varianten-Auswahl -->
-                <?php foreach ($varianten_gruppen as $gruppe => $werte): ?>
                 <div class="varianten-gruppe">
-                    <label><?= htmlspecialchars($gruppe) ?></label>
+                    <label>Variante wählen:</label>
                     <select name="variante" id="variante_select" onchange="wechsleVariante(this.value)">
                         <?php foreach ($varianten as $var): 
-                            $selected = ($var['id'] == $id) ? 'selected' : '';
-                            $optName = $var['optionen'] ? str_replace('||', ', ', str_replace($gruppe.':', '', $var['optionen'])) : $produkt['name'];
+                            $selected = ($var['id'] == $aktuelle_variante_id) ? 'selected' : '';
+                            // Zeige optionen_text wenn vorhanden, sonst Preis
+                            $optName = !empty($var['optionen_text']) ? $var['optionen_text'] : number_format($var['preis'], 2, ',', '.') . ' €';
                         ?>
-                        <option value="<?= $var['id'] ?>" <?= $selected ?> 
-                            data-preis="<?= $var['preis'] ?>" 
-                            data-artikelnr="<?= htmlspecialchars($var['artikelnummer']) ?>">
-                            <?= htmlspecialchars($optName) ?>
+                        <option value="<?= $var['id'] ?>" <?= $selected ?>>
+                            <?= htmlspecialchars($optName) ?> - <?= number_format($var['preis'], 2, ',', '.') ?> €
                         </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <?php endforeach; ?>
                 <?php endif; ?>
                 
                 <label for="menge">Menge:</label>
