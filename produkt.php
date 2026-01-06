@@ -153,22 +153,23 @@ require_once 'header.inc.php';
     .beschreibung-content strong, .beschreibung-content b { color: #003366; }
 </style>
 
-<!-- Page Header -->
-<div class="page-header">
+<!-- Breadcrumb -->
+<div class="breadcrumb">
     <div class="container">
-        <div class="page-header-content">
-            <div class="page-header-left">
-                <div class="breadcrumb">
-                    <a href="index.php">Startseite</a>
-                    <?php foreach ($breadcrumb as $bc): ?>
-                    <span>&gt;</span>
-                    <a href="index.php?kat=<?= $bc['id'] ?>"><?= htmlspecialchars($bc['name']) ?></a>
-                    <?php endforeach; ?>
-                </div>
-                <h1 class="page-title"><?= htmlspecialchars($produkt['name']) ?></h1>
-            </div>
-            <div class="page-header-right">
-                <img src="sht_logo.jpg" alt="SHT">
+        <a href="index.php">Startseite</a>
+        <?php foreach ($breadcrumb as $bc): ?>
+        <span class="separator">&gt;</span>
+        <a href="index.php?kat=<?= $bc['id'] ?>"><?= htmlspecialchars($bc['name']) ?></a>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<!-- Category Banner -->
+<div class="category-banner">
+    <div class="container">
+        <div class="category-info">
+            <div class="category-text">
+                <h1><?= htmlspecialchars($produkt['name']) ?></h1>
             </div>
         </div>
     </div>

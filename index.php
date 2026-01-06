@@ -122,38 +122,50 @@ require_once 'header.inc.php';
     /* Hinweis wenn leer */
     .hinweis { padding: 2rem; background: #f9f9f9; text-align: center; border-radius: 8px; }
     
+    /* Sortierung */
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .toolbar select { padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px; }
+    
     @media (max-width: 768px) {
         .flex { flex-direction: column; }
         .sidebar { width: 100%; }
     }
 </style>
 
-<!-- Page Header -->
-<div class="page-header">
+<!-- Breadcrumb -->
+<div class="breadcrumb">
     <div class="container">
-        <div class="page-header-content">
-            <div class="page-header-left">
-                <?php if ($kategorie_id > 0): ?>
-                <div class="breadcrumb">
-                    <a href="index.php">Startseite</a>
-                    <?php 
-                    // Breadcrumb-Pfad aufbauen
-                    $pfad = [];
-                    $check = $kategorien_by_id[$kategorie_id] ?? null;
-                    while ($check) {
-                        array_unshift($pfad, $check);
-                        $check = $check['parent_id'] ? ($kategorien_by_id[$check['parent_id']] ?? null) : null;
-                    }
-                    foreach ($pfad as $p): ?>
-                    <span>&gt;</span>
-                    <a href="index.php?kat=<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></a>
-                    <?php endforeach; ?>
-                </div>
+        <a href="index.php">Startseite</a>
+        <?php 
+        if ($kategorie_id > 0):
+            // Breadcrumb-Pfad aufbauen
+            $pfad = [];
+            $check = $kategorien_by_id[$kategorie_id] ?? null;
+            while ($check) {
+                array_unshift($pfad, $check);
+                $check = $check['parent_id'] ? ($kategorien_by_id[$check['parent_id']] ?? null) : null;
+            }
+            foreach ($pfad as $idx => $p): ?>
+            <span class="separator">&gt;</span>
+            <?php if ($idx == count($pfad) - 1): ?>
+            <span class="current"><?= htmlspecialchars($p['name']) ?></span>
+            <?php else: ?>
+            <a href="index.php?kat=<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></a>
+            <?php endif; ?>
+        <?php endforeach;
+        endif; ?>
+    </div>
+</div>
+
+<!-- Category Banner -->
+<div class="category-banner">
+    <div class="container">
+        <div class="category-info">
+            <div class="category-text">
+                <h1><?= htmlspecialchars($aktuelle_kategorie_name) ?></h1>
+                <?php if ($kategorie_id > 0 && isset($kategorien_by_id[$kategorie_id]['beschreibung'])): ?>
+                <p><?= htmlspecialchars($kategorien_by_id[$kategorie_id]['beschreibung']) ?></p>
                 <?php endif; ?>
-                <h1 class="page-title"><?= htmlspecialchars($aktuelle_kategorie_name) ?></h1>
-            </div>
-            <div class="page-header-right">
-                <img src="sht_logo.jpg" alt="SHT">
             </div>
         </div>
     </div>

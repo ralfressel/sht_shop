@@ -80,22 +80,19 @@ require_once 'header.inc.php';
     .hinweis-leer h2 { color: #666; margin-bottom: 1rem; }
 </style>
 
-<!-- Page Header -->
-<div class="page-header">
+<!-- Breadcrumb -->
+<div class="breadcrumb">
     <div class="container">
-        <div class="page-header-content">
-            <div class="page-header-left">
-                <div class="breadcrumb">
-                    <a href="index.php">Startseite</a>
-                    <span>&gt;</span>
-                    <span>Warenkorb</span>
-                </div>
-                <h1 class="page-title">Warenkorb</h1>
-            </div>
-            <div class="page-header-right">
-                <img src="sht_logo.jpg" alt="SHT">
-            </div>
-        </div>
+        <a href="index.php">Startseite</a>
+        <span class="separator">&gt;</span>
+        <span class="current">Warenkorb</span>
+    </div>
+</div>
+
+<!-- Page Header -->
+<div class="page-header-simple">
+    <div class="container">
+        <h1>Warenkorb</h1>
     </div>
 </div>
 

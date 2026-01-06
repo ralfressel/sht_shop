@@ -156,24 +156,21 @@ require_once 'header.inc.php';
     .fehler-liste { background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 1rem; margin-bottom: 1rem; color: #721c24; }
 </style>
 
-<!-- Page Header -->
-<div class="page-header">
+<!-- Breadcrumb -->
+<div class="breadcrumb">
     <div class="container">
-        <div class="page-header-content">
-            <div class="page-header-left">
-                <div class="breadcrumb">
-                    <a href="index.php">Startseite</a>
-                    <span>&gt;</span>
-                    <a href="warenkorb.php">Warenkorb</a>
-                    <span>&gt;</span>
-                    <span>Kasse</span>
-                </div>
-                <h1 class="page-title"><?= $bestellung_erfolgreich ? 'Bestellung abgeschlossen' : 'Kasse' ?></h1>
-            </div>
-            <div class="page-header-right">
-                <img src="sht_logo.jpg" alt="SHT">
-            </div>
-        </div>
+        <a href="index.php">Startseite</a>
+        <span class="separator">&gt;</span>
+        <a href="warenkorb.php">Warenkorb</a>
+        <span class="separator">&gt;</span>
+        <span class="current">Kasse</span>
+    </div>
+</div>
+
+<!-- Page Header -->
+<div class="page-header-simple">
+    <div class="container">
+        <h1><?= $bestellung_erfolgreich ? 'Bestellung abgeschlossen' : 'Kasse' ?></h1>
     </div>
 </div>
 

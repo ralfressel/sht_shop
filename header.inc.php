@@ -21,18 +21,18 @@
             background: #003366;
             color: white;
             font-size: 0.8rem;
-            padding: 0.4rem 0;
+            padding: 0.5rem 0;
         }
         .top-bar .container {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 1.5rem;
+            gap: 2rem;
         }
         .top-bar-item {
             display: flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.4rem;
             white-space: nowrap;
         }
         .top-bar-item svg { width: 14px; height: 14px; fill: currentColor; }
@@ -41,108 +41,165 @@
         .main-header {
             background: white;
             border-bottom: 1px solid #e0e0e0;
-            padding: 0.75rem 0;
+            padding: 0.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         .header-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 2rem;
+            gap: 1.5rem;
+        }
+        .logo {
+            flex-shrink: 0;
         }
         .logo img {
-            height: 50px;
+            height: 45px;
             width: auto;
         }
         
-        /* Navigation */
+        /* Navigation - alle Hauptmenüpunkte */
         .main-nav {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.25rem;
             flex-wrap: wrap;
+            flex: 1;
+            justify-content: center;
         }
         .main-nav a {
             color: #003366;
             text-decoration: none;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 500;
-            padding: 0.5rem 0.75rem;
+            padding: 0.5rem 0.6rem;
             border-radius: 4px;
-            transition: background 0.2s;
+            transition: color 0.2s;
+            white-space: nowrap;
         }
         .main-nav a:hover {
-            background: #f0f4f8;
-            color: #0056b3;
+            color: #0066cc;
         }
         .main-nav a.active {
-            background: #003366;
-            color: white;
+            color: #0066cc;
+            font-weight: 600;
         }
         
         /* Header Icons */
         .header-icons {
             display: flex;
-            gap: 1rem;
+            gap: 1.25rem;
             align-items: center;
+            flex-shrink: 0;
         }
         .header-icon {
             color: #003366;
-            font-size: 1.5rem;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .header-icon:hover { opacity: 0.7; }
+        .header-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        .header-icon:hover { color: #0066cc; }
         
-        /* Page Header with Background */
-        .page-header {
-            background: linear-gradient(135deg, #f0f4f8 0%, #d9e4ec 100%);
+        /* Category Banner / Page Header */
+        .category-banner {
+            background: linear-gradient(135deg, #e8f0f7 0%, #d0e0ed 50%, #f5d893 100%);
             position: relative;
-            padding: 1.5rem 0;
+            min-height: 280px;
             overflow: hidden;
         }
-        .page-header::after {
+        .category-banner::before {
             content: '';
             position: absolute;
             right: 0;
             top: 0;
             bottom: 0;
-            width: 40%;
-            background: url('sht_background.jpg') right center no-repeat;
+            width: 50%;
+            background: url('sht_background.jpg') center center no-repeat;
             background-size: cover;
-            opacity: 0.6;
+            opacity: 0.8;
         }
-        .page-header-content {
+        .category-banner-content {
             position: relative;
             z-index: 1;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        .page-header-left { flex: 1; }
-        .page-header-right {
-            flex-shrink: 0;
-            margin-left: 2rem;
-        }
-        .page-header-right img {
-            height: 60px;
-            width: auto;
+            padding: 1rem 0;
         }
         
         /* Breadcrumb */
         .breadcrumb {
             color: #003366;
             font-size: 0.85rem;
-            margin-bottom: 0.75rem;
+            padding: 0.75rem 0;
+            background: rgba(255,255,255,0.7);
+            margin-bottom: 0;
+        }
+        .breadcrumb .container {
+            display: flex;
+            align-items: center;
         }
         .breadcrumb a {
-            color: #0066cc;
+            color: #003366;
             text-decoration: none;
             font-weight: 500;
         }
-        .breadcrumb a:hover { text-decoration: underline; }
-        .breadcrumb span { color: #666; margin: 0 0.3rem; }
+        .breadcrumb a:hover { color: #0066cc; }
+        .breadcrumb .separator { 
+            color: #666; 
+            margin: 0 0.5rem;
+            font-weight: bold;
+        }
+        .breadcrumb .current {
+            color: #0066cc;
+            font-weight: 500;
+        }
         
-        /* Page Title */
-        .page-title {
+        /* Category Info */
+        .category-info {
+            display: flex;
+            gap: 2rem;
+            padding: 1.5rem 0;
+            align-items: flex-start;
+        }
+        .category-images {
+            display: flex;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+        .category-images img {
+            height: 120px;
+            width: auto;
+            object-fit: contain;
+        }
+        .category-text {
+            flex: 1;
+        }
+        .category-text h1 {
             font-size: 1.75rem;
+            font-weight: 700;
+            color: #003366;
+            margin-bottom: 0.75rem;
+        }
+        .category-text p {
+            color: #444;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        /* Simple Page Header (für Warenkorb, Kasse etc.) */
+        .page-header-simple {
+            background: linear-gradient(135deg, #e8f0f7 0%, #d0e0ed 100%);
+            padding: 1.5rem 0;
+        }
+        .page-header-simple h1 {
+            font-size: 1.5rem;
             font-weight: 700;
             color: #003366;
             margin: 0;
@@ -150,23 +207,13 @@
         
         /* Container */
         .container { 
-            max-width: 1200px; 
+            max-width: 1400px; 
             margin: 0 auto; 
             padding: 0 1rem; 
         }
         .main-content {
             padding: 1.5rem 0;
         }
-        
-        /* Footer */
-        footer { 
-            background: #003366; 
-            color: white; 
-            padding: 2rem 1rem; 
-            margin-top: 3rem; 
-            text-align: center; 
-        }
-        footer a { color: #7eb8e7; }
         
         /* Buttons */
         .btn { 
@@ -194,15 +241,6 @@
         .meldung.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .meldung.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .meldung.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .top-bar .container { font-size: 0.7rem; gap: 1rem; }
-            .header-content { flex-wrap: wrap; }
-            .main-nav { justify-content: center; width: 100%; }
-            .page-header::after { width: 30%; opacity: 0.3; }
-            .page-title { font-size: 1.3rem; }
-        }
         
         /* Kontakt-Sidebar */
         .kontakt-sidebar {
@@ -309,7 +347,21 @@
             text-decoration: underline;
         }
         
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .main-nav a { font-size: 0.8rem; padding: 0.4rem 0.5rem; }
+        }
+        @media (max-width: 900px) {
+            .header-content { flex-wrap: wrap; }
+            .main-nav { order: 3; width: 100%; justify-content: center; margin-top: 0.5rem; }
+            .category-info { flex-direction: column; }
+            .category-images { justify-content: center; }
+        }
         @media (max-width: 768px) {
+            .top-bar .container { font-size: 0.7rem; gap: 1rem; }
+            .main-nav a { font-size: 0.75rem; padding: 0.3rem 0.4rem; }
+            .category-banner { min-height: 200px; }
+            .category-text h1 { font-size: 1.3rem; }
             .kontakt-sidebar {
                 top: auto;
                 bottom: 0;
@@ -384,12 +436,12 @@ function toggleKontakt() {
         </div>
         <div class="top-bar-item">
             <svg viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
-            03681 454266-20
+            Rufen Sie uns an: 03681 454266-20
         </div>
     </div>
 </div>
 
-<!-- Main Header -->
+<!-- Main Header (sticky) -->
 <header class="main-header">
     <div class="container">
         <div class="header-content">
@@ -398,15 +450,32 @@ function toggleKontakt() {
             </a>
             
             <nav class="main-nav">
-                <a href="index.php"<?= basename($_SERVER['PHP_SELF']) == 'index.php' && empty($_GET['kat']) ? ' class="active"' : '' ?>>Home</a>
-                <a href="index.php?kat=1">Anschlagmittel</a>
-                <a href="index.php?kat=2">Hebezeuge</a>
-                <a href="index.php?kat=3">Ladungssicherung</a>
+                <a href="index.php">Home</a>
+                <a href="index.php?kat=1">Angebot</a>
+                <a href="index.php?kat=2">Krane</a>
+                <a href="index.php?kat=3">Hebezeuge</a>
+                <a href="index.php?kat=4">Anschlagmittel</a>
+                <a href="index.php?kat=5">Ladungssicherung</a>
+                <a href="index.php?kat=6">Unterm Haken</a>
+                <a href="index.php?kat=7">PSA</a>
+                <a href="index.php?kat=8">Industrietore</a>
+                <a href="index.php?kat=9">Industriebedarf</a>
+                <a href="#">Blog</a>
             </nav>
             
             <div class="header-icons">
-                <a href="#" class="header-icon" title="Suchen">🔍</a>
-                <a href="warenkorb.php" class="header-icon" title="Warenkorb">🛒</a>
+                <a href="#" class="header-icon" title="Suchen">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </a>
+                <a href="#" class="header-icon" title="Merkliste">
+                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </a>
+                <a href="#" class="header-icon" title="Mein Konto">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </a>
+                <a href="warenkorb.php" class="header-icon" title="Warenkorb">
+                    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                </a>
             </div>
         </div>
     </div>
