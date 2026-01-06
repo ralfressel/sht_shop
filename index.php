@@ -64,7 +64,13 @@ require_once 'header.inc.php';
     .flex { display: flex; gap: 2rem; }
     
     /* Sidebar */
-    .sidebar { width: 280px; flex-shrink: 0; }
+    .sidebar { 
+        width: 280px; 
+        flex-shrink: 0; 
+        background: white;
+        padding: 1rem;
+        padding-left: 0;
+    }
     .sidebar h3 { 
         margin-bottom: 0.75rem; 
         color: #003366; 
