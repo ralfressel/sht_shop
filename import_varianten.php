@@ -159,14 +159,14 @@ echo "✓ Alle benötigten SQL-Dateien gefunden\n\n";
 
 echo "Erstelle Tabellen falls nicht vorhanden...\n";
 
-$conn->query("CREATE TABLE IF NOT EXISTS varianten_gruppen (
+$db->query("CREATE TABLE IF NOT EXISTS varianten_gruppen (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     sortierung INT DEFAULT 0,
     INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-$conn->query("CREATE TABLE IF NOT EXISTS varianten_werte (
+$db->query("CREATE TABLE IF NOT EXISTS varianten_werte (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     gruppe_id INT UNSIGNED NOT NULL,
     wert VARCHAR(255) NOT NULL,
@@ -175,7 +175,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS varianten_werte (
     INDEX idx_wert (wert)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-$conn->query("CREATE TABLE IF NOT EXISTS produkt_varianten (
+$db->query("CREATE TABLE IF NOT EXISTS produkt_varianten (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     produkt_id INT UNSIGNED NOT NULL,
     wert_id INT UNSIGNED NOT NULL,
@@ -185,9 +185,9 @@ $conn->query("CREATE TABLE IF NOT EXISTS produkt_varianten (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
 // Leere die Tabellen
-$conn->query("TRUNCATE TABLE produkt_varianten");
-$conn->query("TRUNCATE TABLE varianten_werte");
-$conn->query("TRUNCATE TABLE varianten_gruppen");
+$db->query("TRUNCATE TABLE produkt_varianten");
+$db->query("TRUNCATE TABLE varianten_werte");
+$db->query("TRUNCATE TABLE varianten_gruppen");
 
 echo "✓ Tabellen vorbereitet\n\n";
 
@@ -233,10 +233,10 @@ foreach ($group_rows as $row) {
     $name = isset($group_names[$uuid]) ? $group_names[$uuid] : 'Unbekannt';
     $sortierung = isset($row[4]) ? (int)$row[4] : 0;
     
-    $name = $conn->real_escape_string($name);
+    $name = $db->real_escape_string($name);
     
-    $conn->query("INSERT INTO varianten_gruppen (name, sortierung) VALUES ('$name', $sortierung)");
-    $group_mapping[$uuid] = $conn->insert_id;
+    $db->query("INSERT INTO varianten_gruppen (name, sortierung) VALUES ('$name', $sortierung)");
+    $group_mapping[$uuid] = $db->insert_id;
     $groups_imported++;
 }
 
@@ -290,10 +290,10 @@ foreach ($opt_rows as $row) {
     $wert = isset($option_names[$uuid]) ? $option_names[$uuid] : 'Unbekannt';
     $sortierung = isset($row[3]) ? (int)$row[3] : 0;
     
-    $wert = $conn->real_escape_string($wert);
+    $wert = $db->real_escape_string($wert);
     
-    $conn->query("INSERT INTO varianten_werte (gruppe_id, wert, sortierung) VALUES ($gruppe_id, '$wert', $sortierung)");
-    $option_mapping[$uuid] = $conn->insert_id;
+    $db->query("INSERT INTO varianten_werte (gruppe_id, wert, sortierung) VALUES ($gruppe_id, '$wert', $sortierung)");
+    $option_mapping[$uuid] = $db->insert_id;
     $options_imported++;
 }
 
@@ -307,7 +307,7 @@ echo "=== SCHRITT 3: Produkt-Varianten-Verknüpfungen ===\n";
 
 // Lade Produkt-Mapping
 $produkt_mapping = [];
-$result = $conn->query("SELECT shopware_uuid, neue_id FROM uuid_mapping WHERE tabelle = 'produkte'");
+$result = $db->query("SELECT shopware_uuid, neue_id FROM uuid_mapping WHERE tabelle = 'produkte'");
 while ($row = $result->fetch_assoc()) {
     $produkt_mapping[$row['shopware_uuid']] = $row['neue_id'];
 }
@@ -340,9 +340,9 @@ foreach ($prod_opt_rows as $row) {
     $wert_id = $option_mapping[$option_uuid];
     
     // Vermeide Duplikate
-    $exists = $conn->query("SELECT id FROM produkt_varianten WHERE produkt_id = $produkt_id AND wert_id = $wert_id")->num_rows;
+    $exists = $db->query("SELECT id FROM produkt_varianten WHERE produkt_id = $produkt_id AND wert_id = $wert_id")->num_rows;
     if ($exists == 0) {
-        $conn->query("INSERT INTO produkt_varianten (produkt_id, wert_id) VALUES ($produkt_id, $wert_id)");
+        $db->query("INSERT INTO produkt_varianten (produkt_id, wert_id) VALUES ($produkt_id, $wert_id)");
         $links_imported++;
     }
 }
@@ -364,7 +364,7 @@ echo "\n";
 
 // Zeige Beispiele
 echo "=== Beispiel-Daten ===\n";
-$example = $conn->query("SELECT vg.name as gruppe, vw.wert, COUNT(pv.id) as produkte
+$example = $db->query("SELECT vg.name as gruppe, vw.wert, COUNT(pv.id) as produkte
     FROM varianten_gruppen vg
     JOIN varianten_werte vw ON vw.gruppe_id = vg.id
     LEFT JOIN produkt_varianten pv ON pv.wert_id = vw.id
