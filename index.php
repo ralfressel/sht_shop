@@ -69,8 +69,6 @@ require_once 'header.inc.php';
         flex-shrink: 0; 
         background: white;
         padding: 1rem;
-        padding-left: 2rem;
-        margin-left: -2rem;
     }
     .sidebar h3 { 
         margin-bottom: 0.75rem; 
