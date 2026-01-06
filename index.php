@@ -25,8 +25,29 @@ $sql_count = "SELECT COUNT(*) as total FROM produkte $where";
 $total = db_fetch_row($sql_count)['total'];
 $seiten_gesamt = ceil($total / $pro_seite);
 
-// Kategorien für Navigation
-$kategorien = db_fetch_all("SELECT * FROM kategorien WHERE aktiv = 1 ORDER BY sortierung, name");
+// Kategorien für Navigation (hierarchisch)
+$alle_kategorien = db_fetch_all("SELECT * FROM kategorien WHERE aktiv = 1 ORDER BY sortierung, name");
+
+// Baue hierarchische Struktur
+$kategorien_by_id = [];
+$hauptkategorien = [];
+foreach ($alle_kategorien as $kat) {
+    $kategorien_by_id[$kat['id']] = $kat;
+    if (empty($kat['parent_id'])) {
+        $hauptkategorien[] = $kat;
+    }
+}
+
+// Funktion um Unterkategorien zu holen
+function getUnterkategorien($parent_id, $alle_kategorien) {
+    $children = [];
+    foreach ($alle_kategorien as $kat) {
+        if ($kat['parent_id'] == $parent_id) {
+            $children[] = $kat;
+        }
+    }
+    return $children;
+}
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -110,11 +131,40 @@ $kategorien = db_fetch_all("SELECT * FROM kategorien WHERE aktiv = 1 ORDER BY so
             <h3>Kategorien</h3>
             <ul>
                 <li><a href="index.php" <?= $kategorie_id == 0 ? 'class="active"' : '' ?>>Alle Produkte</a></li>
-                <?php foreach ($kategorien as $kat): ?>
+                <?php foreach ($hauptkategorien as $kat): ?>
                     <li>
                         <a href="index.php?kat=<?= $kat['id'] ?>" <?= $kategorie_id == $kat['id'] ? 'class="active"' : '' ?>>
-                            <?= htmlspecialchars($kat['name']) ?>
+                            <strong><?= htmlspecialchars($kat['name']) ?></strong>
                         </a>
+                        <?php 
+                        $unterkategorien = getUnterkategorien($kat['id'], $alle_kategorien);
+                        if (count($unterkategorien) > 0): 
+                        ?>
+                            <ul style="margin-left: 1rem; margin-top: 0.3rem;">
+                                <?php foreach ($unterkategorien as $subkat): ?>
+                                    <li>
+                                        <a href="index.php?kat=<?= $subkat['id'] ?>" <?= $kategorie_id == $subkat['id'] ? 'class="active"' : '' ?>>
+                                            <?= htmlspecialchars($subkat['name']) ?>
+                                        </a>
+                                        <?php 
+                                        // 3. Ebene falls vorhanden
+                                        $unter_unter = getUnterkategorien($subkat['id'], $alle_kategorien);
+                                        if (count($unter_unter) > 0): 
+                                        ?>
+                                            <ul style="margin-left: 1rem; margin-top: 0.2rem; font-size: 0.9em;">
+                                                <?php foreach ($unter_unter as $subsubkat): ?>
+                                                    <li>
+                                                        <a href="index.php?kat=<?= $subsubkat['id'] ?>" <?= $kategorie_id == $subsubkat['id'] ? 'class="active"' : '' ?>>
+                                                            <?= htmlspecialchars($subsubkat['name']) ?>
+                                                        </a>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -144,7 +194,7 @@ $kategorien = db_fetch_all("SELECT * FROM kategorien WHERE aktiv = 1 ORDER BY so
                                 <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect fill='%23f0f0f0' width='200' height='200'/><text x='100' y='105' text-anchor='middle' fill='%23999' font-size='14'>Kein Bild</text></svg>" alt="Kein Bild">
                             <?php endif; ?>
                             <div class="info">
-                                <p class="artikelnr">Art.-Nr.: <?= htmlspecialchars($p['artikelnr']) ?></p>
+                                <p class="artikelnr">Art.-Nr.: <?= htmlspecialchars($p['artikelnummer'] ?? $p['artikelnr'] ?? '') ?></p>
                                 <h3><?= htmlspecialchars($p['name']) ?></h3>
                                 <p class="preis"><?= number_format($p['preis'], 2, ',', '.') ?> €</p>
                                 <a href="produkt.php?id=<?= $p['id'] ?>" class="btn">Details</a>
