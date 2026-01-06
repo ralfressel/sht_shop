@@ -210,8 +210,6 @@
         .main-content {
             padding: 1.5rem 0;
             background: white;
-            box-shadow: 0 0 0 100vmax white;
-            clip-path: inset(0 -100vmax);
         }
         .main-content .container {
             padding: 0 3rem;
