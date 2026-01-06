@@ -294,55 +294,141 @@ foreach ($cat_translations as $trans) {
 }
 echo "Deutsche Kategorie-Übersetzungen: " . count($cat_trans_map) . "\n";
 
-// Importiere Kategorien mit Hierarchie
-$imported_cats = 0;
+// Deutsche Root-Kategorie-ID finden (parent der Hauptkategorien)
+// Die Root "Deutsch" hat level=1 und name="Deutsch"
+$german_root_uuid = null;
+foreach ($categories as $cat) {
+    $uuid = hexToString($cat['id']);
+    $level = isset($cat['level']) ? intval($cat['level']) : 0;
+    if ($level == 1 && isset($cat_trans_map[$uuid])) {
+        $name = $cat_trans_map[$uuid]['name'];
+        if ($name === 'Deutsch' || $name === 'German') {
+            $german_root_uuid = $uuid;
+            echo "Deutsche Root-Kategorie gefunden: $uuid\n";
+            break;
+        }
+    }
+}
+
+// Kategorien filtern und sortieren
+$valid_categories = [];
 $cat_parent_map = []; // UUID -> parent_uuid
+$cat_level_map = []; // UUID -> level
 
 foreach ($categories as $cat) {
     $uuid = hexToString($cat['id']);
     $parent_uuid = isset($cat['parent_id']) && $cat['parent_id'] !== 'NULL' ? hexToString($cat['parent_id']) : null;
     $active = isset($cat['active']) ? intval($cat['active']) : 1;
+    $visible = isset($cat['visible']) ? intval($cat['visible']) : 1;
     $level = isset($cat['level']) ? intval($cat['level']) : 1;
+    $type = isset($cat['type']) ? cleanSqlValue($cat['type']) : 'page';
     
     $cat_parent_map[$uuid] = $parent_uuid;
+    $cat_level_map[$uuid] = $level;
     
-    // Nur aktive Kategorien mit deutscher Übersetzung
-    if ($active && isset($cat_trans_map[$uuid]) && !empty($cat_trans_map[$uuid]['name'])) {
-        $trans = $cat_trans_map[$uuid];
-        $name = $trans['name'];
-        
-        // Root-Kategorie "Deutsch" überspringen
-        if ($name === 'Deutsch' || $level < 2) {
-            continue;
-        }
-        
-        // Temporär ohne parent_id einfügen
-        $sql = "INSERT INTO kategorien (name, parent_id, aktiv) VALUES ('" . 
-               db_escape($name) . "', NULL, 1)";
-        
-        if (db_query($sql)) {
-            $new_id = db_insert_id();
-            $uuid_kategorie[$uuid] = $new_id;
-            $imported_cats++;
-            
-            // Mapping speichern
-            db_query("INSERT INTO uuid_mapping (tabelle, alte_uuid, neue_id) VALUES ('kategorien', '$uuid', $new_id)");
+    // Filter: nur page-Typ, aktiv, sichtbar, Level >= 2
+    if ($type !== 'page' || !$active || !$visible || $level < 2) {
+        continue;
+    }
+    
+    // Muss deutsche Übersetzung haben
+    if (!isset($cat_trans_map[$uuid]) || empty($cat_trans_map[$uuid]['name'])) {
+        continue;
+    }
+    
+    $name = $cat_trans_map[$uuid]['name'];
+    
+    // Ausschluss-Filter für nicht-Produktkategorien
+    $exclude_patterns = [
+        '/^Blog/i',           // Blog-Einträge
+        '/^Blogeintrag/i',    // Blog-Einträge
+        '/^CGV$/i',           // Französisch AGB
+        '/^Conditions/i',     // Französische Seiten
+        '/^Chariots/i',       // Französische Kategorien
+        '/^Butées$/i',        // Französisch
+        '/^Mentions/i',       // Mentions légales
+        '/livraison/i',       // Lieferung (FR)
+        '/paiement/i',        // Zahlung (FR)
+        '/^Footermenü/i',     // Footer
+        '/^Service$/i',       // Service-Seite
+        '/^Impressum$/i',     // Impressum
+        '/^Datenschutz$/i',   // Datenschutz
+        '/^AGB$/i',           // AGB
+        '/^Widerrufs/i',      // Widerruf
+        '/^Kontakt$/i',       // Kontakt
+    ];
+    
+    $excluded = false;
+    foreach ($exclude_patterns as $pattern) {
+        if (preg_match($pattern, $name)) {
+            $excluded = true;
+            break;
         }
     }
+    if ($excluded) continue;
+    
+    // Prüfe ob unter deutscher Root (oder dessen Kindern)
+    $is_under_german_root = false;
+    $check_uuid = $uuid;
+    $depth = 0;
+    while ($check_uuid && $depth < 10) {
+        if ($check_uuid === $german_root_uuid) {
+            $is_under_german_root = true;
+            break;
+        }
+        $check_uuid = $cat_parent_map[$check_uuid] ?? null;
+        $depth++;
+    }
+    
+    if (!$is_under_german_root && $german_root_uuid) {
+        continue; // Nicht unter deutscher Root
+    }
+    
+    $valid_categories[$uuid] = [
+        'uuid' => $uuid,
+        'parent_uuid' => $parent_uuid,
+        'level' => $level,
+        'name' => $name
+    ];
 }
-echo "Importierte Kategorien: $imported_cats\n";
 
-// Update parent_id basierend auf Hierarchie
-$updated_parents = 0;
-foreach ($uuid_kategorie as $uuid => $new_id) {
-    $parent_uuid = $cat_parent_map[$uuid];
+echo "Gültige Kategorien nach Filter: " . count($valid_categories) . "\n";
+
+// Sortiere nach Level (Eltern zuerst)
+uasort($valid_categories, function($a, $b) {
+    return $a['level'] - $b['level'];
+});
+
+// Importiere Kategorien
+$imported_cats = 0;
+foreach ($valid_categories as $uuid => $cat_data) {
+    $name = $cat_data['name'];
+    $parent_uuid = $cat_data['parent_uuid'];
+    $level = $cat_data['level'];
+    
+    // Parent-ID ermitteln (falls Parent bereits importiert)
+    $parent_new_id = null;
     if ($parent_uuid && isset($uuid_kategorie[$parent_uuid])) {
         $parent_new_id = $uuid_kategorie[$parent_uuid];
-        db_query("UPDATE kategorien SET parent_id = $parent_new_id WHERE id = $new_id");
-        $updated_parents++;
+    }
+    
+    $sql = "INSERT INTO kategorien (name, parent_id, aktiv) VALUES ('" . 
+           db_escape($name) . "', " . ($parent_new_id ? $parent_new_id : 'NULL') . ", 1)";
+    
+    if (db_query($sql)) {
+        $new_id = db_insert_id();
+        $uuid_kategorie[$uuid] = $new_id;
+        $imported_cats++;
+        
+        // Mapping speichern
+        db_query("INSERT INTO uuid_mapping (tabelle, alte_uuid, neue_id) VALUES ('kategorien', '$uuid', $new_id)");
+        
+        // Debug: Zeige Hierarchie
+        $indent = str_repeat('  ', $level - 2);
+        echo "$indent- $name (Level $level)\n";
     }
 }
-echo "Kategorie-Hierarchien aktualisiert: $updated_parents\n";
+echo "\nImportierte Kategorien: $imported_cats\n";
 
 // =====================================================
 // SCHRITT 2: Produkte importieren
