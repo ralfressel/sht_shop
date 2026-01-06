@@ -242,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
             <?php if ($produkt['beschreibung']): ?>
             <div class="beschreibung">
                 <h3>Beschreibung</h3>
-                <div><?= nl2br(htmlspecialchars($produkt['beschreibung'])) ?></div>
+                <div><?= $produkt['beschreibung'] ?></div>
             </div>
             <?php endif; ?>
             
