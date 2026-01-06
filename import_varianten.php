@@ -308,10 +308,21 @@ echo "=== SCHRITT 3: Produkt-Varianten-Verknüpfungen ===\n";
 // Lade Produkt-Mapping
 $produkt_mapping = [];
 $result = $db->query("SELECT shopware_uuid, neue_id FROM uuid_mapping WHERE tabelle = 'produkte'");
-while ($row = $result->fetch_assoc()) {
-    $produkt_mapping[$row['shopware_uuid']] = $row['neue_id'];
+if ($result === false) {
+    echo "⚠ uuid_mapping Tabelle nicht gefunden oder leer.\n";
+    echo "   Bitte erst shopware_import.php ausführen!\n";
+    echo "   Fehler: " . $db->error . "\n";
+} else {
+    while ($row = $result->fetch_assoc()) {
+        $produkt_mapping[$row['shopware_uuid']] = $row['neue_id'];
+    }
 }
 echo "Geladen: " . count($produkt_mapping) . " Produkt-Mappings\n";
+
+if (empty($produkt_mapping)) {
+    echo "\n❌ Keine Produkte gefunden! Überspringe Verknüpfungen.\n";
+    echo "   Bitte erst shopware_import.php ausführen um Produkte zu importieren.\n";
+} else {
 
 // Lade Product Options
 $prod_opts_sql = file_get_contents($sql_dir . 'product_option.sql');
@@ -349,6 +360,7 @@ foreach ($prod_opt_rows as $row) {
 
 echo "✓ $links_imported Verknüpfungen importiert\n";
 echo "⚠ $links_skipped Verknüpfungen übersprungen (Produkt/Option nicht gefunden)\n\n";
+} // Ende if (!empty($produkt_mapping))
 
 // =====================================================
 // Zusammenfassung
