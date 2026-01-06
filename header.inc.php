@@ -210,6 +210,7 @@
         .main-content {
             padding: 1.5rem 0;
             background: white;
+            margin-top: 1rem;
         }
         .main-content .container {
             padding: 0 3rem;
