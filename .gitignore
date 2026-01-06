@@ -1,0 +1,24 @@
+# Datenbankdump (zu groß und sensibel)
+*.sql
+!schema.sql
+
+# Konfiguration mit Passwörtern
+opendb.inc.php
+
+# Media-Ordner (zu groß für Git)
+media/
+bilder/
+
+# PHP/System
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Stripe Library (wird manuell hinzugefügt)
+stripe/

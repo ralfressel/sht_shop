@@ -1,0 +1,5 @@
+# Entwicklungsphase - Seite vor Suchmaschinen verstecken
+# Diese Datei vor Go-Live anpassen!
+
+User-agent: *
+Disallow: /
