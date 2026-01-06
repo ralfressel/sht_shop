@@ -115,13 +115,18 @@
         .category-banner {
             background: linear-gradient(135deg, #e8f0f7 0%, #d0e0ed 100%);
             position: relative;
-            min-height: 200px;
             overflow: hidden;
         }
         .category-banner-content {
             position: relative;
             z-index: 1;
-            padding: 1rem 0;
+            padding: 0.5rem 0;
+        }
+        .category-banner h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #003366;
+            margin: 0.5rem 0;
         }
         
         /* Breadcrumb */
@@ -200,11 +205,14 @@
         .container { 
             max-width: 1400px; 
             margin: 0 auto; 
-            padding: 0 1rem; 
+            padding: 0 2rem; 
         }
         .main-content {
             padding: 1.5rem 0;
             background: white;
+        }
+        .main-content .container {
+            padding: 0 3rem;
         }
         
         /* Buttons */
