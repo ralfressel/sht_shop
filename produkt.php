@@ -222,11 +222,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
                     <select name="variante" id="variante_select" onchange="wechsleVariante(this.value)">
                         <?php foreach ($varianten as $var): 
                             $selected = ($var['id'] == $aktuelle_variante_id) ? 'selected' : '';
-                            // Zeige optionen_text wenn vorhanden, sonst Preis
-                            $optName = !empty($var['optionen_text']) ? $var['optionen_text'] : number_format($var['preis'], 2, ',', '.') . ' €';
+                            $optName = !empty($var['optionen_text']) ? $var['optionen_text'] : 'Variante';
                         ?>
                         <option value="<?= $var['id'] ?>" <?= $selected ?>>
-                            <?= htmlspecialchars($optName) ?> - <?= number_format($var['preis'], 2, ',', '.') ?> €
+                            <?= htmlspecialchars($optName) ?>
                         </option>
                         <?php endforeach; ?>
                     </select>
