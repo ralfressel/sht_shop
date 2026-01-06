@@ -14,7 +14,7 @@ if ($id <= 0) {
 }
 
 // Produkt laden
-$produkt = db_fetch_row("SELECT p.*, k.name as kategorie_name, k.slug as kategorie_slug 
+$produkt = db_fetch_row("SELECT p.*, k.name as kategorie_name, k.id as kat_id 
     FROM produkte p 
     LEFT JOIN kategorien k ON p.kategorie_id = k.id 
     WHERE p.id = $id AND p.aktiv = 1");
@@ -55,127 +55,126 @@ if ($produkt['parent_id']) {
     }
 }
 
+// Breadcrumb-Pfad aufbauen
+$breadcrumb = [];
+if ($produkt['kat_id']) {
+    $alle_kategorien = db_fetch_all("SELECT * FROM kategorien WHERE aktiv = 1");
+    $kategorien_by_id = [];
+    foreach ($alle_kategorien as $kat) {
+        $kategorien_by_id[$kat['id']] = $kat;
+    }
+    $check_id = $produkt['kat_id'];
+    while ($check_id && isset($kategorien_by_id[$check_id])) {
+        array_unshift($breadcrumb, $kategorien_by_id[$check_id]);
+        $check_id = $kategorien_by_id[$check_id]['parent_id'];
+    }
+}
+
 // Warenkorb-Aktion
 $meldung = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
     session_start();
     $menge = max(1, (int)$_POST['menge']);
     
+    // Varianten-ID verwenden wenn ausgewählt
+    $warenkorb_id = isset($_POST['variante']) ? (int)$_POST['variante'] : $id;
+    $warenkorb_produkt = $warenkorb_id != $id ? db_fetch_row("SELECT * FROM produkte WHERE id = $warenkorb_id") : $produkt;
+    
     if (!isset($_SESSION['warenkorb'])) {
         $_SESSION['warenkorb'] = [];
     }
     
-    if (isset($_SESSION['warenkorb'][$id])) {
-        $_SESSION['warenkorb'][$id]['menge'] += $menge;
+    if (isset($_SESSION['warenkorb'][$warenkorb_id])) {
+        $_SESSION['warenkorb'][$warenkorb_id]['menge'] += $menge;
     } else {
-        $_SESSION['warenkorb'][$id] = [
-            'produkt_id' => $id,
-            'name' => $produkt['name'],
-            'artikelnr' => $produkt['artikelnr'],
-            'preis' => $produkt['preis'],
+        $_SESSION['warenkorb'][$warenkorb_id] = [
+            'produkt_id' => $warenkorb_id,
+            'name' => $warenkorb_produkt['name'],
+            'artikelnr' => $warenkorb_produkt['artikelnummer'],
+            'preis' => $warenkorb_produkt['preis'],
             'menge' => $menge,
-            'bild' => $produkt['bild']
+            'bild' => $warenkorb_produkt['bild'],
+            'optionen_text' => $warenkorb_produkt['optionen_text'] ?? ''
         ];
     }
     
     $meldung = 'success';
 }
+
+$page_title = htmlspecialchars($produkt['name']) . ' - SHT Hebetechnik';
+require_once 'header.inc.php';
 ?>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title><?= htmlspecialchars($produkt['name']) ?> - SHT Hebetechnik</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        
-        header { background: #2c3e50; color: white; padding: 1rem; }
-        header h1 { font-size: 1.5rem; }
-        nav { background: #34495e; padding: 0.5rem 1rem; }
-        nav a { color: white; text-decoration: none; margin-right: 1rem; }
-        nav a:hover { text-decoration: underline; }
-        
-        .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-        
-        .breadcrumb { padding: 1rem 0; color: #666; font-size: 0.9rem; }
-        .breadcrumb a { color: #2c3e50; text-decoration: none; }
-        .breadcrumb a:hover { text-decoration: underline; }
-        
-        .produkt-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem; }
-        @media (max-width: 768px) { .produkt-detail { grid-template-columns: 1fr; } }
-        
-        .produkt-bild { background: #f9f9f9; border-radius: 8px; padding: 1rem; text-align: center; }
-        .produkt-bild img { max-width: 100%; max-height: 500px; object-fit: contain; }
-        
-        .produkt-info h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
-        .produkt-info .artikelnr { color: #666; margin-bottom: 1rem; }
-        .produkt-info .preis { font-size: 2rem; font-weight: bold; color: #e74c3c; margin: 1rem 0; }
-        .produkt-info .preis small { font-size: 0.9rem; font-weight: normal; color: #666; }
-        .produkt-info .mwst { font-size: 0.85rem; color: #666; }
-        
-        .beschreibung { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; }
-        .beschreibung h3 { margin-bottom: 0.5rem; }
-        
-        .beschreibung-full { margin-top: 2rem; padding: 1.5rem; background: #f9f9f9; border-radius: 8px; }
-        .beschreibung-full h3 { font-size: 1.3rem; color: #2c3e50; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #3498db; }
-        .beschreibung-content { line-height: 1.8; }
-        .beschreibung-content h2, .beschreibung-content h3, .beschreibung-content h4 { color: #2c3e50; margin: 1.5rem 0 0.75rem 0; }
-        .beschreibung-content h2 { font-size: 1.4rem; }
-        .beschreibung-content h3 { font-size: 1.2rem; }
-        .beschreibung-content ul, .beschreibung-content ol { margin: 1rem 0; padding-left: 1.5rem; }
-        .beschreibung-content li { margin-bottom: 0.5rem; }
-        .beschreibung-content p { margin-bottom: 1rem; }
-        .beschreibung-content strong, .beschreibung-content b { color: #2c3e50; }
-        
-        .warenkorb-form { margin-top: 1.5rem; padding: 1.5rem; background: #f5f5f5; border-radius: 8px; }
-        .warenkorb-form label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
-        .warenkorb-form input[type="number"] { width: 80px; padding: 0.5rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px; }
-        .warenkorb-form button { background: #27ae60; color: white; border: none; padding: 0.75rem 2rem; font-size: 1rem; border-radius: 4px; cursor: pointer; margin-top: 1rem; }
-        .warenkorb-form button:hover { background: #219a52; }
-        
-        .varianten-gruppe { margin-bottom: 1rem; }
-        .varianten-gruppe select { width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; }
-        .varianten-gruppe select:focus { outline: 2px solid #3498db; border-color: #3498db; }
-        
-        .meldung { padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
-        .meldung.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        
-        .lagerbestand { margin-top: 0.5rem; font-size: 0.9rem; }
-        .lagerbestand.verfuegbar { color: #27ae60; }
-        .lagerbestand.niedrig { color: #f39c12; }
-        .lagerbestand.leer { color: #e74c3c; }
-        
-        footer { background: #2c3e50; color: white; padding: 2rem 1rem; margin-top: 3rem; text-align: center; }
-    </style>
-</head>
-<body>
 
-<header>
-    <div class="container">
-        <h1>🏗️ SHT Hebetechnik</h1>
-    </div>
-</header>
-
-<nav>
-    <div class="container">
-        <a href="index.php">Startseite</a>
-        <a href="warenkorb.php">Warenkorb</a>
-    </div>
-</nav>
-
-<div class="container">
+<style>
+    .produkt-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem; }
+    @media (max-width: 768px) { .produkt-detail { grid-template-columns: 1fr; } }
     
-    <!-- Breadcrumb -->
-    <div class="breadcrumb">
-        <a href="index.php">Startseite</a> &raquo;
-        <?php if ($produkt['kategorie_name']): ?>
-            <a href="index.php?kat=<?= $produkt['kategorie_id'] ?>"><?= htmlspecialchars($produkt['kategorie_name']) ?></a> &raquo;
-        <?php endif; ?>
-        <?= htmlspecialchars($produkt['name']) ?>
+    .produkt-bild { background: #f9f9f9; border-radius: 8px; padding: 1rem; text-align: center; }
+    .produkt-bild img { max-width: 100%; max-height: 500px; object-fit: contain; }
+    
+    .produkt-info h1 { font-size: 1.5rem; color: #003366; margin-bottom: 0.5rem; }
+    .produkt-info .artikelnr { color: #666; margin-bottom: 1rem; font-size: 0.9rem; }
+    .produkt-info .preis { font-size: 1.75rem; font-weight: bold; color: #333; margin: 1rem 0; }
+    .produkt-info .preis small { font-size: 0.9rem; font-weight: normal; color: #666; }
+    .produkt-info .mwst { font-size: 0.85rem; color: #666; }
+    .produkt-info .inhalt { font-size: 0.9rem; color: #666; margin-top: -0.5rem; }
+    
+    .lagerbestand { margin-top: 0.75rem; font-size: 0.9rem; }
+    .lagerbestand.verfuegbar { color: #28a745; }
+    .lagerbestand.niedrig { color: #ffc107; }
+    .lagerbestand.leer { color: #dc3545; }
+    
+    .warenkorb-form { margin-top: 1.5rem; padding: 1.5rem; background: #f5f5f5; border-radius: 8px; }
+    .warenkorb-form label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #003366; }
+    .warenkorb-form input[type="number"] { width: 80px; padding: 0.5rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px; }
+    .warenkorb-form button { background: #28a745; color: white; border: none; padding: 0.75rem 2rem; font-size: 1rem; border-radius: 4px; cursor: pointer; margin-top: 1rem; transition: background 0.2s; }
+    .warenkorb-form button:hover { background: #218838; }
+    
+    .varianten-gruppe { margin-bottom: 1rem; }
+    .varianten-gruppe select { width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; }
+    .varianten-gruppe select:focus { outline: 2px solid #003366; border-color: #003366; }
+    
+    /* Beschreibung */
+    .beschreibung-full { margin-top: 2.5rem; padding: 2rem; background: #f9f9f9; border-radius: 8px; }
+    .beschreibung-full h3 { 
+        font-size: 1.2rem; 
+        color: #003366; 
+        margin-bottom: 1rem; 
+        padding-bottom: 0.75rem; 
+        border-bottom: 2px solid #003366; 
+    }
+    .beschreibung-content { line-height: 1.8; }
+    .beschreibung-content h2, .beschreibung-content h3, .beschreibung-content h4 { color: #003366; margin: 1.5rem 0 0.75rem 0; }
+    .beschreibung-content h2 { font-size: 1.3rem; }
+    .beschreibung-content h3 { font-size: 1.15rem; }
+    .beschreibung-content ul, .beschreibung-content ol { margin: 1rem 0; padding-left: 1.5rem; }
+    .beschreibung-content li { margin-bottom: 0.5rem; }
+    .beschreibung-content p { margin-bottom: 1rem; }
+    .beschreibung-content strong, .beschreibung-content b { color: #003366; }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="page-header-content">
+            <div class="page-header-left">
+                <div class="breadcrumb">
+                    <a href="index.php">Startseite</a>
+                    <?php foreach ($breadcrumb as $bc): ?>
+                    <span>&gt;</span>
+                    <a href="index.php?kat=<?= $bc['id'] ?>"><?= htmlspecialchars($bc['name']) ?></a>
+                    <?php endforeach; ?>
+                </div>
+                <h1 class="page-title"><?= htmlspecialchars($produkt['name']) ?></h1>
+            </div>
+            <div class="page-header-right">
+                <img src="sht_logo.jpg" alt="SHT">
+            </div>
+        </div>
     </div>
+</div>
+
+<div class="container main-content">
     
     <?php if ($meldung == 'success'): ?>
     <div class="meldung success">
@@ -197,18 +196,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
         
         <!-- Info -->
         <div class="produkt-info">
-            <p class="artikelnr">Art.-Nr.: <?= htmlspecialchars($produkt['artikelnr']) ?></p>
+            <p class="artikelnr">Art.-Nr.: <?= htmlspecialchars($produkt['artikelnummer']) ?></p>
             <h1><?= htmlspecialchars($produkt['name']) ?></h1>
             
             <p class="preis">
-                <?= number_format($produkt['preis'], 2, ',', '.') ?> €
-                <small>inkl. MwSt.</small>
+                <?= number_format($produkt['preis'], 2, ',', '.') ?> €<small>*</small>
             </p>
+            <p class="inhalt">Inhalt: 1 Stück</p>
             
             <?php if ($produkt['preis_netto']): ?>
             <p class="mwst">
                 Netto: <?= number_format($produkt['preis_netto'], 2, ',', '.') ?> € 
-                (zzgl. <?= number_format($produkt['mwst_satz'], 0) ?>% MwSt.)
+                (zzgl. <?= number_format($produkt['mwst_satz'] ?? 19, 0) ?>% MwSt.)
             </p>
             <?php endif; ?>
             
@@ -261,18 +260,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
     </div>
     <?php endif; ?>
     
+    <p style="margin-top: 1.5rem; font-size: 0.8rem; color: #666;">* Alle Preise inkl. MwSt., zzgl. Versand</p>
+    
 </div>
-
-<footer>
-    <p>&copy; <?= date('Y') ?> SHT Hebetechnik Suhl</p>
-</footer>
 
 <script>
 function wechsleVariante(produktId) {
-    // Zur neuen Variante navigieren
     window.location.href = 'produkt.php?id=' + produktId;
 }
 </script>
 
-</body>
-</html>
+<?php require_once 'footer.inc.php'; ?>

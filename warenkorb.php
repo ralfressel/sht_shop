@@ -53,88 +53,63 @@ foreach ($_SESSION['warenkorb'] as $item) {
     $summe += $item['preis'] * $item['menge'];
     $anzahl_artikel += $item['menge'];
 }
+
+$page_title = 'Warenkorb - SHT Hebetechnik';
+require_once 'header.inc.php';
 ?>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Warenkorb - SHT Hebetechnik</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        
-        header { background: #2c3e50; color: white; padding: 1rem; }
-        header h1 { font-size: 1.5rem; }
-        nav { background: #34495e; padding: 0.5rem 1rem; }
-        nav a { color: white; text-decoration: none; margin-right: 1rem; }
-        nav a:hover { text-decoration: underline; }
-        
-        .container { max-width: 1000px; margin: 0 auto; padding: 1rem; }
-        
-        h2 { margin: 1rem 0; color: #2c3e50; }
-        
-        .meldung { padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
-        .meldung.success { background: #d4edda; color: #155724; }
-        
-        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f5f5f5; font-weight: bold; }
-        
-        .artikel-bild { width: 80px; height: 80px; object-fit: contain; background: #f9f9f9; border-radius: 4px; }
-        .artikel-info { display: flex; align-items: center; gap: 1rem; }
-        .artikel-name { font-weight: bold; }
-        .artikel-nr { color: #666; font-size: 0.85rem; }
-        
-        .menge-input { width: 60px; padding: 0.5rem; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
-        
-        .preis { font-weight: bold; white-space: nowrap; }
-        .summe-zeile td { font-weight: bold; font-size: 1.1rem; background: #f5f5f5; }
-        
-        .btn { display: inline-block; padding: 0.5rem 1rem; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; font-size: 0.9rem; }
-        .btn-primary { background: #2c3e50; color: white; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-outline { background: white; border: 1px solid #ddd; color: #333; }
-        .btn:hover { opacity: 0.9; }
-        
-        .aktionen { margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-        
-        .warenkorb-leer { text-align: center; padding: 3rem; background: #f9f9f9; border-radius: 8px; }
-        .warenkorb-leer p { margin: 1rem 0; color: #666; }
-        
-        .checkout-box { background: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-top: 2rem; }
-        .checkout-box h3 { margin-bottom: 1rem; }
-        .checkout-summe { font-size: 1.5rem; font-weight: bold; color: #e74c3c; margin: 1rem 0; }
-        
-        footer { background: #2c3e50; color: white; padding: 2rem 1rem; margin-top: 3rem; text-align: center; }
-    </style>
-</head>
-<body>
 
-<header>
-    <div class="container">
-        <h1>🏗️ SHT Hebetechnik</h1>
-    </div>
-</header>
-
-<nav>
-    <div class="container">
-        <a href="index.php">Startseite</a>
-        <a href="warenkorb.php">Warenkorb (<?= $anzahl_artikel ?>)</a>
-    </div>
-</nav>
-
-<div class="container">
+<style>
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; background: white; }
+    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e0e0e0; }
+    th { background: #f5f5f5; font-weight: 600; color: #003366; }
     
-    <h2>🛒 Warenkorb</h2>
+    .artikel-bild { width: 80px; height: 80px; object-fit: contain; background: #f9f9f9; border-radius: 4px; }
+    .artikel-info { display: flex; align-items: center; gap: 1rem; }
+    .artikel-name { font-weight: 600; color: #003366; }
+    .artikel-nr { color: #666; font-size: 0.85rem; }
+    .artikel-option { color: #666; font-size: 0.85rem; font-style: italic; }
+    
+    .menge-input { width: 60px; padding: 0.5rem; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
+    
+    .preis { font-weight: 600; white-space: nowrap; }
+    .summe-zeile td { font-weight: bold; font-size: 1.1rem; background: #f5f5f5; }
+    
+    .aktionen { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    
+    .hinweis-leer { text-align: center; padding: 3rem; background: #f9f9f9; border-radius: 8px; }
+    .hinweis-leer h2 { color: #666; margin-bottom: 1rem; }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="page-header-content">
+            <div class="page-header-left">
+                <div class="breadcrumb">
+                    <a href="index.php">Startseite</a>
+                    <span>&gt;</span>
+                    <span>Warenkorb</span>
+                </div>
+                <h1 class="page-title">Warenkorb</h1>
+            </div>
+            <div class="page-header-right">
+                <img src="sht_logo.jpg" alt="SHT">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container main-content">
     
     <?php if ($meldung): ?>
     <div class="meldung success">
-        <?php if ($meldung == 'aktualisiert'): ?>✓ Warenkorb wurde aktualisiert.<?php endif; ?>
-        <?php if ($meldung == 'entfernt'): ?>✓ Artikel wurde entfernt.<?php endif; ?>
-        <?php if ($meldung == 'geleert'): ?>✓ Warenkorb wurde geleert.<?php endif; ?>
+        <?php 
+        switch($meldung) {
+            case 'aktualisiert': echo '✓ Warenkorb wurde aktualisiert.'; break;
+            case 'entfernt': echo '✓ Artikel wurde entfernt.'; break;
+            case 'geleert': echo '✓ Warenkorb wurde geleert.'; break;
+        }
+        ?>
     </div>
     <?php endif; ?>
     
@@ -145,23 +120,30 @@ foreach ($_SESSION['warenkorb'] as $item) {
             <thead>
                 <tr>
                     <th>Artikel</th>
-                    <th>Einzelpreis</th>
-                    <th>Menge</th>
-                    <th>Gesamt</th>
-                    <th></th>
+                    <th style="width: 120px;">Einzelpreis</th>
+                    <th style="width: 100px;">Menge</th>
+                    <th style="width: 120px;">Summe</th>
+                    <th style="width: 80px;"></th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($_SESSION['warenkorb'] as $id => $item): ?>
+                <?php foreach ($_SESSION['warenkorb'] as $id => $item): 
+                    $artikel_summe = $item['preis'] * $item['menge'];
+                ?>
                 <tr>
                     <td>
                         <div class="artikel-info">
                             <?php if ($item['bild']): ?>
-                                <img src="<?= htmlspecialchars($item['bild']) ?>" alt="" class="artikel-bild">
+                            <img src="<?= htmlspecialchars($item['bild']) ?>" alt="" class="artikel-bild">
+                            <?php else: ?>
+                            <div class="artikel-bild" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #999;">—</div>
                             <?php endif; ?>
                             <div>
                                 <div class="artikel-name"><?= htmlspecialchars($item['name']) ?></div>
                                 <div class="artikel-nr">Art.-Nr.: <?= htmlspecialchars($item['artikelnr']) ?></div>
+                                <?php if (!empty($item['optionen_text'])): ?>
+                                <div class="artikel-option"><?= htmlspecialchars($item['optionen_text']) ?></div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </td>
@@ -169,7 +151,7 @@ foreach ($_SESSION['warenkorb'] as $item) {
                     <td>
                         <input type="number" name="menge[<?= $id ?>]" value="<?= $item['menge'] ?>" min="0" max="99" class="menge-input">
                     </td>
-                    <td class="preis"><?= number_format($item['preis'] * $item['menge'], 2, ',', '.') ?> €</td>
+                    <td class="preis"><?= number_format($artikel_summe, 2, ',', '.') ?> €</td>
                     <td>
                         <button type="submit" name="entfernen" value="<?= $id ?>" class="btn btn-outline" title="Entfernen">✕</button>
                     </td>
@@ -185,39 +167,29 @@ foreach ($_SESSION['warenkorb'] as $item) {
         </table>
         
         <div class="aktionen">
-            <div>
-                <button type="submit" name="aktualisieren" class="btn btn-outline">Mengen aktualisieren</button>
-                <button type="submit" name="leeren" class="btn btn-danger" onclick="return confirm('Warenkorb wirklich leeren?')">Warenkorb leeren</button>
-            </div>
-            <a href="index.php" class="btn btn-outline">← Weiter einkaufen</a>
+            <button type="submit" name="aktualisieren" class="btn btn-outline">Aktualisieren</button>
+            <button type="submit" name="leeren" class="btn btn-danger" onclick="return confirm('Warenkorb wirklich leeren?')">Warenkorb leeren</button>
+            <a href="index.php" class="btn btn-outline">Weiter einkaufen</a>
+            <a href="kasse.php" class="btn btn-success">Zur Kasse</a>
         </div>
     </form>
     
-    <div class="checkout-box">
-        <h3>Zur Kasse</h3>
-        <p>Gesamtsumme inkl. MwSt.:</p>
-        <p class="checkout-summe"><?= number_format($summe, 2, ',', '.') ?> €</p>
-        <p style="color: #666; font-size: 0.9rem;">zzgl. Versandkosten</p>
-        <br>
-        <a href="kasse.php" class="btn btn-success" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Zur Kasse →</a>
-    </div>
+    <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #666;">
+        * Alle Preise inkl. MwSt., zzgl. Versand. Versandkostenfrei ab 100 € Bestellwert.
+    </p>
     
     <?php else: ?>
     
-    <div class="warenkorb-leer">
-        <p style="font-size: 3rem;">🛒</p>
-        <p>Ihr Warenkorb ist leer.</p>
-        <br>
-        <a href="index.php" class="btn btn-primary">Jetzt einkaufen</a>
+    <div class="hinweis-leer">
+        <h2>🛒 Ihr Warenkorb ist leer</h2>
+        <p>Stöbern Sie in unserem Sortiment und finden Sie die passenden Produkte.</p>
+        <p style="margin-top: 1.5rem;">
+            <a href="index.php" class="btn btn-primary">Zum Shop</a>
+        </p>
     </div>
     
     <?php endif; ?>
     
 </div>
 
-<footer>
-    <p>&copy; <?= date('Y') ?> SHT Hebetechnik Suhl</p>
-</footer>
-
-</body>
-</html>
+<?php require_once 'footer.inc.php'; ?>

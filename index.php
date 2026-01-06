@@ -11,8 +11,8 @@ $seite = isset($_GET['seite']) ? max(1, (int)$_GET['seite']) : 1;
 $pro_seite = 24;
 $offset = ($seite - 1) * $pro_seite;
 
-// Produkte laden
-$where = "WHERE aktiv = 1";
+// Produkte laden - nur Hauptprodukte (ohne Varianten)
+$where = "WHERE aktiv = 1 AND parent_id IS NULL";
 if ($kategorie_id > 0) {
     $where .= " AND kategorie_id = $kategorie_id";
 }
@@ -48,93 +48,118 @@ function getUnterkategorien($parent_id, $alle_kategorien) {
     }
     return $children;
 }
+
+// Aktuelle Kategorie Name für Titel
+$aktuelle_kategorie_name = 'Alle Produkte';
+if ($kategorie_id > 0 && isset($kategorien_by_id[$kategorie_id])) {
+    $aktuelle_kategorie_name = $kategorien_by_id[$kategorie_id]['name'];
+}
+
+$page_title = $aktuelle_kategorie_name . ' - SHT Hebetechnik';
+require_once 'header.inc.php';
 ?>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>SHT Hebetechnik - Shop</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        
-        /* Header */
-        header { background: #2c3e50; color: white; padding: 1rem; }
-        header h1 { font-size: 1.5rem; }
-        nav { background: #34495e; padding: 0.5rem 1rem; }
-        nav a { color: white; text-decoration: none; margin-right: 1rem; }
-        nav a:hover { text-decoration: underline; }
-        
-        /* Layout */
-        .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-        .flex { display: flex; gap: 2rem; }
-        
-        /* Sidebar */
-        .sidebar { width: 280px; flex-shrink: 0; }
-        .sidebar h3 { margin-bottom: 0.5rem; border-bottom: 2px solid #2c3e50; padding-bottom: 0.5rem; }
-        .sidebar ul { list-style: none; }
-        .sidebar > ul > li { margin: 0.2rem 0; border-bottom: 1px solid #eee; }
-        .sidebar a { color: #2c3e50; text-decoration: none; display: block; padding: 0.4rem 0; }
-        .sidebar a:hover { color: #e74c3c; }
-        .sidebar a.active { font-weight: bold; color: #e74c3c; }
-        
-        /* Klappbares Menü */
-        .kat-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .kat-header a { flex: 1; }
-        .kat-toggle { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.8rem; transition: transform 0.2s; }
-        .kat-toggle.open { transform: rotate(90deg); }
-        .kat-submenu { display: none; margin-left: 1rem; padding-left: 0.5rem; border-left: 2px solid #ddd; margin-top: 0.3rem; margin-bottom: 0.3rem; }
-        .kat-submenu.open { display: block; }
-        .kat-submenu li { margin: 0.2rem 0; }
-        .kat-submenu a { padding: 0.3rem 0; font-size: 0.95em; }
-        .kat-submenu .kat-submenu { font-size: 0.9em; }
-        
-        /* Produkte Grid */
-        .produkte { flex: 1; }
-        .produkte-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
-        
-        /* Produkt-Karte */
-        .produkt-karte { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: box-shadow 0.3s; }
-        .produkt-karte:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .produkt-karte img { width: 100%; height: 200px; object-fit: contain; background: #f9f9f9; }
-        .produkt-karte .info { padding: 1rem; }
-        .produkt-karte h3 { font-size: 1rem; margin-bottom: 0.5rem; }
-        .produkt-karte .artikelnr { color: #666; font-size: 0.85rem; }
-        .produkt-karte .preis { font-size: 1.25rem; font-weight: bold; color: #e74c3c; margin: 0.5rem 0; }
-        .produkt-karte .btn { display: inline-block; background: #2c3e50; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 4px; }
-        .produkt-karte .btn:hover { background: #e74c3c; }
-        
-        /* Pagination */
-        .pagination { margin-top: 2rem; text-align: center; }
-        .pagination a, .pagination span { display: inline-block; padding: 0.5rem 1rem; margin: 0 0.2rem; border: 1px solid #ddd; text-decoration: none; color: #333; }
-        .pagination a:hover { background: #f0f0f0; }
-        .pagination .current { background: #2c3e50; color: white; border-color: #2c3e50; }
-        
-        /* Hinweis wenn leer */
-        .hinweis { padding: 2rem; background: #f9f9f9; text-align: center; border-radius: 8px; }
-        
-        /* Footer */
-        footer { background: #2c3e50; color: white; padding: 2rem 1rem; margin-top: 3rem; text-align: center; }
-    </style>
-</head>
-<body>
 
-<header>
+<style>
+    /* Layout */
+    .flex { display: flex; gap: 2rem; }
+    
+    /* Sidebar */
+    .sidebar { width: 280px; flex-shrink: 0; }
+    .sidebar h3 { 
+        margin-bottom: 0.75rem; 
+        color: #003366; 
+        font-size: 1.1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #003366;
+    }
+    .sidebar ul { list-style: none; }
+    .sidebar > ul > li { margin: 0.2rem 0; border-bottom: 1px solid #eee; }
+    .sidebar a { color: #333; text-decoration: none; display: block; padding: 0.5rem 0; transition: color 0.2s; }
+    .sidebar a:hover { color: #0066cc; }
+    .sidebar a.active { font-weight: bold; color: #003366; }
+    
+    /* Klappbares Menü */
+    .kat-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .kat-header a { flex: 1; }
+    .kat-toggle { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.8rem; transition: transform 0.2s; }
+    .kat-toggle.open { transform: rotate(90deg); }
+    .kat-submenu { display: none; margin-left: 1rem; padding-left: 0.5rem; border-left: 2px solid #ddd; margin-top: 0.3rem; margin-bottom: 0.3rem; }
+    .kat-submenu.open { display: block; }
+    .kat-submenu li { margin: 0.2rem 0; }
+    .kat-submenu a { padding: 0.3rem 0; font-size: 0.95em; }
+    .kat-submenu .kat-submenu { font-size: 0.9em; }
+    
+    /* Produkte Grid */
+    .produkte { flex: 1; }
+    .produkte-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+    
+    /* Produkt-Karte */
+    .produkt-karte { 
+        border: 1px solid #e0e0e0; 
+        border-radius: 8px; 
+        overflow: hidden; 
+        transition: box-shadow 0.3s, transform 0.2s;
+        background: white;
+    }
+    .produkt-karte:hover { 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        transform: translateY(-2px);
+    }
+    .produkt-karte img { width: 100%; height: 200px; object-fit: contain; background: #f9f9f9; }
+    .produkt-karte .info { padding: 1rem; }
+    .produkt-karte h3 { font-size: 0.95rem; margin-bottom: 0.5rem; color: #003366; line-height: 1.3; }
+    .produkt-karte .artikelnr { color: #666; font-size: 0.8rem; }
+    .produkt-karte .preis { font-size: 1.25rem; font-weight: bold; color: #333; margin: 0.75rem 0; }
+    .produkt-karte .preis small { font-size: 0.75rem; font-weight: normal; color: #666; }
+    .produkt-karte .btn { width: 100%; text-align: center; }
+    
+    /* Pagination */
+    .pagination { margin-top: 2rem; text-align: center; }
+    .pagination a, .pagination span { display: inline-block; padding: 0.5rem 1rem; margin: 0 0.2rem; border: 1px solid #ddd; text-decoration: none; color: #333; border-radius: 4px; }
+    .pagination a:hover { background: #f0f4f8; border-color: #003366; }
+    .pagination .current { background: #003366; color: white; border-color: #003366; }
+    
+    /* Hinweis wenn leer */
+    .hinweis { padding: 2rem; background: #f9f9f9; text-align: center; border-radius: 8px; }
+    
+    @media (max-width: 768px) {
+        .flex { flex-direction: column; }
+        .sidebar { width: 100%; }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
     <div class="container">
-        <h1>🏗️ SHT Hebetechnik</h1>
+        <div class="page-header-content">
+            <div class="page-header-left">
+                <?php if ($kategorie_id > 0): ?>
+                <div class="breadcrumb">
+                    <a href="index.php">Startseite</a>
+                    <?php 
+                    // Breadcrumb-Pfad aufbauen
+                    $pfad = [];
+                    $check = $kategorien_by_id[$kategorie_id] ?? null;
+                    while ($check) {
+                        array_unshift($pfad, $check);
+                        $check = $check['parent_id'] ? ($kategorien_by_id[$check['parent_id']] ?? null) : null;
+                    }
+                    foreach ($pfad as $p): ?>
+                    <span>&gt;</span>
+                    <a href="index.php?kat=<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></a>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <h1 class="page-title"><?= htmlspecialchars($aktuelle_kategorie_name) ?></h1>
+            </div>
+            <div class="page-header-right">
+                <img src="sht_logo.jpg" alt="SHT">
+            </div>
+        </div>
     </div>
-</header>
+</div>
 
-<nav>
-    <div class="container">
-        <a href="index.php">Startseite</a>
-        <a href="warenkorb.php">Warenkorb</a>
-    </div>
-</nav>
-
-<div class="container">
+<div class="container main-content">
     <div class="flex">
         
         <!-- Sidebar mit Kategorien -->
@@ -149,149 +174,113 @@ function getUnterkategorien($parent_id, $alle_kategorien) {
                     $check_id = $kategorie_id;
                     while ($check_id) {
                         $active_path[] = $check_id;
-                        $parent = $kategorien_by_id[$check_id]['parent_id'] ?? null;
-                        $check_id = $parent;
+                        $check_id = $kategorien_by_id[$check_id]['parent_id'] ?? 0;
                     }
                 }
                 
-                foreach ($hauptkategorien as $kat): 
-                    $unterkategorien = getUnterkategorien($kat['id'], $alle_kategorien);
-                    $has_children = count($unterkategorien) > 0;
-                    $is_in_path = in_array($kat['id'], $active_path);
-                    $is_open = $is_in_path || $kategorie_id == $kat['id'];
-                ?>
+                // Rekursive Funktion zum Rendern
+                function renderKategorien($kategorien, $alle_kategorien, $kategorie_id, $active_path, $level = 0) {
+                    foreach ($kategorien as $kat): 
+                        $children = getUnterkategorien($kat['id'], $alle_kategorien);
+                        $has_children = !empty($children);
+                        $is_active = ($kat['id'] == $kategorie_id);
+                        $is_in_path = in_array($kat['id'], $active_path);
+                        $is_open = $is_in_path || $is_active;
+                    ?>
                     <li>
                         <div class="kat-header">
-                            <a href="index.php?kat=<?= $kat['id'] ?>" <?= $kategorie_id == $kat['id'] ? 'class="active"' : '' ?>>
-                                <strong><?= htmlspecialchars($kat['name']) ?></strong>
+                            <a href="index.php?kat=<?= $kat['id'] ?>" <?= $is_active ? 'class="active"' : '' ?>>
+                                <?= htmlspecialchars($kat['name']) ?>
                             </a>
                             <?php if ($has_children): ?>
-                                <span class="kat-toggle <?= $is_open ? 'open' : '' ?>" onclick="toggleKat(this)">▶</span>
+                            <span class="kat-toggle <?= $is_open ? 'open' : '' ?>" onclick="toggleKat(this)">▶</span>
                             <?php endif; ?>
                         </div>
                         <?php if ($has_children): ?>
-                            <ul class="kat-submenu <?= $is_open ? 'open' : '' ?>">
-                                <?php foreach ($unterkategorien as $subkat): 
-                                    $unter_unter = getUnterkategorien($subkat['id'], $alle_kategorien);
-                                    $sub_has_children = count($unter_unter) > 0;
-                                    $sub_is_in_path = in_array($subkat['id'], $active_path);
-                                    $sub_is_open = $sub_is_in_path || $kategorie_id == $subkat['id'];
-                                ?>
-                                    <li>
-                                        <div class="kat-header">
-                                            <a href="index.php?kat=<?= $subkat['id'] ?>" <?= $kategorie_id == $subkat['id'] ? 'class="active"' : '' ?>>
-                                                <?= htmlspecialchars($subkat['name']) ?>
-                                            </a>
-                                            <?php if ($sub_has_children): ?>
-                                                <span class="kat-toggle <?= $sub_is_open ? 'open' : '' ?>" onclick="toggleKat(this)">▶</span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php if ($sub_has_children): ?>
-                                            <ul class="kat-submenu <?= $sub_is_open ? 'open' : '' ?>">
-                                                <?php foreach ($unter_unter as $subsubkat): ?>
-                                                    <li>
-                                                        <a href="index.php?kat=<?= $subsubkat['id'] ?>" <?= $kategorie_id == $subsubkat['id'] ? 'class="active"' : '' ?>>
-                                                            <?= htmlspecialchars($subsubkat['name']) ?>
-                                                        </a>
-                                                    </li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        <?php endif; ?>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
+                        <ul class="kat-submenu <?= $is_open ? 'open' : '' ?>">
+                            <?php renderKategorien($children, $alle_kategorien, $kategorie_id, $active_path, $level + 1); ?>
+                        </ul>
                         <?php endif; ?>
                     </li>
-                <?php endforeach; ?>
+                    <?php endforeach;
+                }
+                
+                renderKategorien($hauptkategorien, $alle_kategorien, $kategorie_id, $active_path);
+                ?>
             </ul>
         </aside>
         
         <!-- Produkte -->
         <main class="produkte">
-            <h2>
-                <?php if ($kategorie_id > 0): ?>
-                    <?php 
-                    $aktuelle_kat = db_fetch_row("SELECT name FROM kategorien WHERE id = $kategorie_id");
-                    echo htmlspecialchars($aktuelle_kat['name'] ?? 'Kategorie');
-                    ?>
-                <?php else: ?>
-                    Alle Produkte
-                <?php endif; ?>
-                <small style="font-weight:normal; color:#666;">(<?= $total ?> Artikel)</small>
-            </h2>
             
             <?php if (count($produkte) > 0): ?>
-                <div class="produkte-grid" style="margin-top: 1rem;">
-                    <?php foreach ($produkte as $p): ?>
-                        <div class="produkt-karte">
-                            <?php if ($p['bild']): ?>
-                                <img src="<?= htmlspecialchars($p['bild']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
-                            <?php else: ?>
-                                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect fill='%23f0f0f0' width='200' height='200'/><text x='100' y='105' text-anchor='middle' fill='%23999' font-size='14'>Kein Bild</text></svg>" alt="Kein Bild">
-                            <?php endif; ?>
-                            <div class="info">
-                                <p class="artikelnr">Art.-Nr.: <?= htmlspecialchars($p['artikelnummer'] ?? $p['artikelnr'] ?? '') ?></p>
-                                <h3><?= htmlspecialchars($p['name']) ?></h3>
-                                <p class="preis"><?= number_format($p['preis'], 2, ',', '.') ?> €</p>
-                                <a href="produkt.php?id=<?= $p['id'] ?>" class="btn">Details</a>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                
-                <!-- Pagination -->
-                <?php if ($seiten_gesamt > 1): ?>
-                    <div class="pagination">
-                        <?php if ($seite > 1): ?>
-                            <a href="?<?= $kategorie_id ? "kat=$kategorie_id&" : '' ?>seite=<?= $seite - 1 ?>">« Zurück</a>
+            
+            <p style="margin-bottom: 1rem; color: #666;"><?= $total ?> Produkte gefunden</p>
+            
+            <div class="produkte-grid">
+                <?php foreach ($produkte as $prod): ?>
+                <div class="produkt-karte">
+                    <a href="produkt.php?id=<?= $prod['id'] ?>">
+                        <?php if ($prod['bild']): ?>
+                            <img src="<?= htmlspecialchars($prod['bild']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>">
+                        <?php else: ?>
+                            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><rect fill='%23f5f5f5' width='400' height='400'/><text x='200' y='210' text-anchor='middle' fill='%23999' font-size='16'>Kein Bild</text></svg>" alt="">
                         <?php endif; ?>
-                        
-                        <?php for ($i = 1; $i <= $seiten_gesamt; $i++): ?>
-                            <?php if ($i == $seite): ?>
-                                <span class="current"><?= $i ?></span>
-                            <?php else: ?>
-                                <a href="?<?= $kategorie_id ? "kat=$kategorie_id&" : '' ?>seite=<?= $i ?>"><?= $i ?></a>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                        
-                        <?php if ($seite < $seiten_gesamt): ?>
-                            <a href="?<?= $kategorie_id ? "kat=$kategorie_id&" : '' ?>seite=<?= $seite + 1 ?>">Weiter »</a>
-                        <?php endif; ?>
+                    </a>
+                    <div class="info">
+                        <p class="artikelnr">Art.-Nr.: <?= htmlspecialchars($prod['artikelnummer']) ?></p>
+                        <h3><a href="produkt.php?id=<?= $prod['id'] ?>" style="color: inherit; text-decoration: none;"><?= htmlspecialchars($prod['name']) ?></a></h3>
+                        <p class="preis">
+                            <?= number_format($prod['preis'], 2, ',', '.') ?> €<small>*</small>
+                        </p>
+                        <a href="produkt.php?id=<?= $prod['id'] ?>" class="btn btn-primary">Details</a>
                     </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <?php if ($seiten_gesamt > 1): ?>
+            <div class="pagination">
+                <?php if ($seite > 1): ?>
+                    <a href="?kat=<?= $kategorie_id ?>&seite=<?= $seite - 1 ?>">« Zurück</a>
                 <?php endif; ?>
                 
-            <?php else: ?>
-                <div class="hinweis">
-                    <p>Keine Produkte gefunden.</p>
-                    <p style="margin-top:1rem; color:#666;">
-                        Falls die Datenbank leer ist, bitte zuerst:
-                        <br>1. <code>schema.sql</code> auf IONOS importieren
-                        <br>2. <code>import.php</code> ausführen
-                    </p>
-                </div>
+                <?php for ($i = max(1, $seite - 2); $i <= min($seiten_gesamt, $seite + 2); $i++): ?>
+                    <?php if ($i == $seite): ?>
+                        <span class="current"><?= $i ?></span>
+                    <?php else: ?>
+                        <a href="?kat=<?= $kategorie_id ?>&seite=<?= $i ?>"><?= $i ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+                
+                <?php if ($seite < $seiten_gesamt): ?>
+                    <a href="?kat=<?= $kategorie_id ?>&seite=<?= $seite + 1 ?>">Weiter »</a>
+                <?php endif; ?>
+            </div>
             <?php endif; ?>
+            
+            <p style="margin-top: 1.5rem; font-size: 0.8rem; color: #666;">* Alle Preise inkl. MwSt., zzgl. Versand</p>
+            
+            <?php else: ?>
+            <div class="hinweis">
+                <p>In dieser Kategorie sind derzeit keine Produkte vorhanden.</p>
+                <p><a href="index.php">Zurück zur Startseite</a></p>
+            </div>
+            <?php endif; ?>
+            
         </main>
         
     </div>
 </div>
 
-<footer>
-    <p>&copy; <?= date('Y') ?> SHT Hebetechnik Suhl</p>
-    <p style="margin-top:0.5rem; font-size:0.85rem; opacity:0.7;">Entwicklungsmodus - nicht für Suchmaschinen freigegeben</p>
-</footer>
-
 <script>
-function toggleKat(element) {
-    // Toggle das Pfeil-Icon
-    element.classList.toggle('open');
-    
-    // Toggle das Submenü (nächstes UL-Element)
-    var submenu = element.parentElement.nextElementSibling;
-    if (submenu && submenu.classList.contains('kat-submenu')) {
+function toggleKat(el) {
+    el.classList.toggle('open');
+    const submenu = el.parentElement.nextElementSibling;
+    if (submenu) {
         submenu.classList.toggle('open');
     }
 }
 </script>
 
-</body>
-</html>
+<?php require_once 'footer.inc.php'; ?>
