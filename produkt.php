@@ -119,6 +119,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
         .beschreibung { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; }
         .beschreibung h3 { margin-bottom: 0.5rem; }
         
+        .beschreibung-full { margin-top: 2rem; padding: 1.5rem; background: #f9f9f9; border-radius: 8px; }
+        .beschreibung-full h3 { font-size: 1.3rem; color: #2c3e50; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #3498db; }
+        .beschreibung-content { line-height: 1.8; }
+        .beschreibung-content h2, .beschreibung-content h3, .beschreibung-content h4 { color: #2c3e50; margin: 1.5rem 0 0.75rem 0; }
+        .beschreibung-content h2 { font-size: 1.4rem; }
+        .beschreibung-content h3 { font-size: 1.2rem; }
+        .beschreibung-content ul, .beschreibung-content ol { margin: 1rem 0; padding-left: 1.5rem; }
+        .beschreibung-content li { margin-bottom: 0.5rem; }
+        .beschreibung-content p { margin-bottom: 1rem; }
+        .beschreibung-content strong, .beschreibung-content b { color: #2c3e50; }
+        
         .warenkorb-form { margin-top: 1.5rem; padding: 1.5rem; background: #f5f5f5; border-radius: 8px; }
         .warenkorb-form label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
         .warenkorb-form input[type="number"] { width: 80px; padding: 0.5rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px; }
@@ -238,17 +249,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['in_warenkorb'])) {
                 <button type="submit" name="in_warenkorb">🛒 In den Warenkorb</button>
             </form>
             
-            <!-- Beschreibung -->
-            <?php if ($produkt['beschreibung']): ?>
-            <div class="beschreibung">
-                <h3>Beschreibung</h3>
-                <div><?= $produkt['beschreibung'] ?></div>
-            </div>
-            <?php endif; ?>
-            
         </div>
         
     </div>
+    
+    <!-- Beschreibung unter dem Produkt, volle Breite -->
+    <?php if ($produkt['beschreibung']): ?>
+    <div class="beschreibung-full">
+        <h3>Produktinformationen "<?= htmlspecialchars($produkt['name']) ?>"</h3>
+        <div class="beschreibung-content"><?= $produkt['beschreibung'] ?></div>
+    </div>
+    <?php endif; ?>
     
 </div>
 
