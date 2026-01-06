@@ -513,11 +513,11 @@ foreach ($products as $prod) {
         $preis = extractPrice($prod['price']);
     }
     
-    // Beschreibung kürzen und HTML bereinigen
-    $beschreibung = strip_tags($beschreibung);
-    if (strlen($beschreibung) > 5000) {
-        $beschreibung = substr($beschreibung, 0, 5000);
-    }
+    // Beschreibung MIT HTML behalten (nur gefährliche Tags entfernen)
+    $beschreibung = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $beschreibung);
+    $beschreibung = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $beschreibung);
+    // Erlaubte HTML-Tags für Formatierung
+    $beschreibung = strip_tags($beschreibung, '<p><br><strong><b><em><i><ul><ol><li><h1><h2><h3><h4><h5><h6><a><table><tr><td><th><thead><tbody><span><div>');
     
     // Insert
     $sql = "INSERT INTO produkte (artikelnummer, name, beschreibung, preis, lagerbestand, aktiv, erstellt) VALUES (
@@ -595,19 +595,86 @@ foreach ($uuid_produkt as $uuid => $new_id) {
 echo "Varianten mit Parent verknüpft: $variants_updated\n";
 
 // =====================================================
+// SCHRITT 5: Varianten-Optionen-Text importieren
+// =====================================================
+echo "\n=== SCHRITT 5: Varianten-Optionen ===\n";
+
+// Lade property_group_option_translation.sql für Optionen-Namen
+$opt_trans_path = SQL_DIR . 'property_group_option_translation.sql';
+if (file_exists($opt_trans_path)) {
+    $opt_trans_content = file_get_contents($opt_trans_path);
+    
+    // Parse Option-Übersetzungen (nur Deutsch)
+    $option_names = [];
+    preg_match_all('/\(0x([a-f0-9]+),\s*0x([a-f0-9]+),\s*0x[a-f0-9]+,\s*\'([^\']*)\'/i', $opt_trans_content, $matches, PREG_SET_ORDER);
+    
+    foreach ($matches as $m) {
+        $lang_id = strtolower($m[1]);
+        $option_id = strtolower($m[2]);
+        $name = $m[3];
+        
+        if ($lang_id === GERMAN_LANGUAGE_ID) {
+            $option_names[$option_id] = $name;
+        }
+    }
+    echo "Gefundene Option-Namen (DE): " . count($option_names) . "\n";
+    
+    // Lade product_option.sql
+    $prod_opt_path = SQL_DIR . 'product_option.sql';
+    if (file_exists($prod_opt_path)) {
+        $prod_opt_content = file_get_contents($prod_opt_path);
+        
+        // Parse: (product_id, product_version_id, property_group_option_id)
+        // Wir brauchen Spalte 1 (product_id) und Spalte 3 (property_group_option_id)
+        preg_match_all('/\(0x([a-f0-9]+),\s*0x[a-f0-9]+,\s*0x([a-f0-9]+)\)/i', $prod_opt_content, $matches, PREG_SET_ORDER);
+        echo "Gefundene Produkt-Optionen: " . count($matches) . "\n";
+        
+        $options_updated = 0;
+        foreach ($matches as $m) {
+            $prod_uuid = strtolower($m[1]);
+            $option_uuid = strtolower($m[2]);
+            
+            // Prüfe ob Produkt existiert und Option einen Namen hat
+            if (isset($option_names[$option_uuid])) {
+                // Finde neue Produkt-ID via uuid_mapping
+                $result = db_fetch_row("SELECT neue_id FROM uuid_mapping WHERE tabelle = 'produkte' AND alte_uuid = '$prod_uuid'");
+                if ($result) {
+                    $prod_id = $result['neue_id'];
+                    $option_text = db_escape($option_names[$option_uuid]);
+                    
+                    // Update optionen_text
+                    db_query("UPDATE produkte SET optionen_text = '$option_text' WHERE id = $prod_id AND optionen_text IS NULL");
+                    if ($db->affected_rows > 0) {
+                        $options_updated++;
+                    }
+                }
+            }
+        }
+        echo "Optionen-Text aktualisiert: $options_updated\n";
+    }
+} else {
+    echo "property_group_option_translation.sql nicht gefunden - übersprungen\n";
+}
+
+// =====================================================
 // ZUSAMMENFASSUNG
 // =====================================================
 echo "\n=== IMPORT ABGESCHLOSSEN ===\n";
 echo "Kategorien: $imported_cats\n";
 echo "Produkte: $imported_prods\n";
 echo "Varianten: $variants_updated\n";
+echo "Optionen-Texte: " . (isset($options_updated) ? $options_updated : 0) . "\n";
 
 // Statistik
 $cat_count = db_fetch_row("SELECT COUNT(*) as cnt FROM kategorien");
 $prod_count = db_fetch_row("SELECT COUNT(*) as cnt FROM produkte");
+$var_count = db_fetch_row("SELECT COUNT(*) as cnt FROM produkte WHERE parent_id IS NOT NULL");
+$opt_count = db_fetch_row("SELECT COUNT(*) as cnt FROM produkte WHERE optionen_text IS NOT NULL AND optionen_text != ''");
 echo "\nDatenbank enthält jetzt:\n";
 echo "  Kategorien: " . $cat_count['cnt'] . "\n";
-echo "  Produkte: " . $prod_count['cnt'] . "\n";
+echo "  Produkte gesamt: " . $prod_count['cnt'] . "\n";
+echo "  davon Varianten: " . $var_count['cnt'] . "\n";
+echo "  mit Optionen-Text: " . $opt_count['cnt'] . "\n";
 
 echo "</pre>";
 echo "<p><a href='index.php'>Zum Shop</a></p>";
