@@ -111,21 +111,12 @@
         
         /* Category Banner / Page Header */
         .category-banner {
-            background: linear-gradient(135deg, #e8f0f7 0%, #d0e0ed 50%, #f5d893 100%);
+            background: linear-gradient(to right, #d6e3ed 0%, #d6e3ed 55%, transparent 55%), 
+                        url('sht_background.jpg') right center no-repeat;
+            background-size: auto, cover;
             position: relative;
             min-height: 280px;
             overflow: hidden;
-        }
-        .category-banner::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 50%;
-            background: url('sht_background.jpg') center center no-repeat;
-            background-size: cover;
-            opacity: 0.8;
         }
         .category-banner-content {
             position: relative;
