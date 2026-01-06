@@ -72,13 +72,24 @@ function getUnterkategorien($parent_id, $alle_kategorien) {
         .flex { display: flex; gap: 2rem; }
         
         /* Sidebar */
-        .sidebar { width: 250px; flex-shrink: 0; }
+        .sidebar { width: 280px; flex-shrink: 0; }
         .sidebar h3 { margin-bottom: 0.5rem; border-bottom: 2px solid #2c3e50; padding-bottom: 0.5rem; }
         .sidebar ul { list-style: none; }
-        .sidebar li { margin: 0.3rem 0; }
-        .sidebar a { color: #2c3e50; text-decoration: none; }
+        .sidebar > ul > li { margin: 0.2rem 0; border-bottom: 1px solid #eee; }
+        .sidebar a { color: #2c3e50; text-decoration: none; display: block; padding: 0.4rem 0; }
         .sidebar a:hover { color: #e74c3c; }
         .sidebar a.active { font-weight: bold; color: #e74c3c; }
+        
+        /* Klappbares Menü */
+        .kat-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .kat-header a { flex: 1; }
+        .kat-toggle { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.8rem; transition: transform 0.2s; }
+        .kat-toggle.open { transform: rotate(90deg); }
+        .kat-submenu { display: none; margin-left: 1rem; padding-left: 0.5rem; border-left: 2px solid #ddd; margin-top: 0.3rem; margin-bottom: 0.3rem; }
+        .kat-submenu.open { display: block; }
+        .kat-submenu li { margin: 0.2rem 0; }
+        .kat-submenu a { padding: 0.3rem 0; font-size: 0.95em; }
+        .kat-submenu .kat-submenu { font-size: 0.9em; }
         
         /* Produkte Grid */
         .produkte { flex: 1; }
@@ -131,27 +142,52 @@ function getUnterkategorien($parent_id, $alle_kategorien) {
             <h3>Kategorien</h3>
             <ul>
                 <li><a href="index.php" <?= $kategorie_id == 0 ? 'class="active"' : '' ?>>Alle Produkte</a></li>
-                <?php foreach ($hauptkategorien as $kat): ?>
+                <?php 
+                // Finde aktive Kategorie-Pfad für Auto-Expand
+                $active_path = [];
+                if ($kategorie_id > 0) {
+                    $check_id = $kategorie_id;
+                    while ($check_id) {
+                        $active_path[] = $check_id;
+                        $parent = $kategorien_by_id[$check_id]['parent_id'] ?? null;
+                        $check_id = $parent;
+                    }
+                }
+                
+                foreach ($hauptkategorien as $kat): 
+                    $unterkategorien = getUnterkategorien($kat['id'], $alle_kategorien);
+                    $has_children = count($unterkategorien) > 0;
+                    $is_in_path = in_array($kat['id'], $active_path);
+                    $is_open = $is_in_path || $kategorie_id == $kat['id'];
+                ?>
                     <li>
-                        <a href="index.php?kat=<?= $kat['id'] ?>" <?= $kategorie_id == $kat['id'] ? 'class="active"' : '' ?>>
-                            <strong><?= htmlspecialchars($kat['name']) ?></strong>
-                        </a>
-                        <?php 
-                        $unterkategorien = getUnterkategorien($kat['id'], $alle_kategorien);
-                        if (count($unterkategorien) > 0): 
-                        ?>
-                            <ul style="margin-left: 1rem; margin-top: 0.3rem;">
-                                <?php foreach ($unterkategorien as $subkat): ?>
+                        <div class="kat-header">
+                            <a href="index.php?kat=<?= $kat['id'] ?>" <?= $kategorie_id == $kat['id'] ? 'class="active"' : '' ?>>
+                                <strong><?= htmlspecialchars($kat['name']) ?></strong>
+                            </a>
+                            <?php if ($has_children): ?>
+                                <span class="kat-toggle <?= $is_open ? 'open' : '' ?>" onclick="toggleKat(this)">▶</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($has_children): ?>
+                            <ul class="kat-submenu <?= $is_open ? 'open' : '' ?>">
+                                <?php foreach ($unterkategorien as $subkat): 
+                                    $unter_unter = getUnterkategorien($subkat['id'], $alle_kategorien);
+                                    $sub_has_children = count($unter_unter) > 0;
+                                    $sub_is_in_path = in_array($subkat['id'], $active_path);
+                                    $sub_is_open = $sub_is_in_path || $kategorie_id == $subkat['id'];
+                                ?>
                                     <li>
-                                        <a href="index.php?kat=<?= $subkat['id'] ?>" <?= $kategorie_id == $subkat['id'] ? 'class="active"' : '' ?>>
-                                            <?= htmlspecialchars($subkat['name']) ?>
-                                        </a>
-                                        <?php 
-                                        // 3. Ebene falls vorhanden
-                                        $unter_unter = getUnterkategorien($subkat['id'], $alle_kategorien);
-                                        if (count($unter_unter) > 0): 
-                                        ?>
-                                            <ul style="margin-left: 1rem; margin-top: 0.2rem; font-size: 0.9em;">
+                                        <div class="kat-header">
+                                            <a href="index.php?kat=<?= $subkat['id'] ?>" <?= $kategorie_id == $subkat['id'] ? 'class="active"' : '' ?>>
+                                                <?= htmlspecialchars($subkat['name']) ?>
+                                            </a>
+                                            <?php if ($sub_has_children): ?>
+                                                <span class="kat-toggle <?= $sub_is_open ? 'open' : '' ?>" onclick="toggleKat(this)">▶</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if ($sub_has_children): ?>
+                                            <ul class="kat-submenu <?= $sub_is_open ? 'open' : '' ?>">
                                                 <?php foreach ($unter_unter as $subsubkat): ?>
                                                     <li>
                                                         <a href="index.php?kat=<?= $subsubkat['id'] ?>" <?= $kategorie_id == $subsubkat['id'] ? 'class="active"' : '' ?>>
@@ -243,6 +279,19 @@ function getUnterkategorien($parent_id, $alle_kategorien) {
     <p>&copy; <?= date('Y') ?> SHT Hebetechnik Suhl</p>
     <p style="margin-top:0.5rem; font-size:0.85rem; opacity:0.7;">Entwicklungsmodus - nicht für Suchmaschinen freigegeben</p>
 </footer>
+
+<script>
+function toggleKat(element) {
+    // Toggle das Pfeil-Icon
+    element.classList.toggle('open');
+    
+    // Toggle das Submenü (nächstes UL-Element)
+    var submenu = element.parentElement.nextElementSibling;
+    if (submenu && submenu.classList.contains('kat-submenu')) {
+        submenu.classList.toggle('open');
+    }
+}
+</script>
 
 </body>
 </html>
