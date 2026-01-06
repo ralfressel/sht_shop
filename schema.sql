@@ -13,7 +13,7 @@ CREATE TABLE kategorien (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     parent_id INT UNSIGNED DEFAULT NULL,
     name VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) DEFAULT NULL,
     sortierung INT DEFAULT 0,
     aktiv TINYINT(1) DEFAULT 1,
     erstellt DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -28,8 +28,9 @@ CREATE TABLE kategorien (
 DROP TABLE IF EXISTS produkte;
 CREATE TABLE produkte (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    parent_id INT UNSIGNED DEFAULT NULL,
     kategorie_id INT UNSIGNED DEFAULT NULL,
-    artikelnr VARCHAR(100) NOT NULL,
+    artikelnummer VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     beschreibung TEXT,
     preis DECIMAL(10,2) NOT NULL DEFAULT 0.00,
@@ -41,10 +42,10 @@ CREATE TABLE produkte (
     aktiv TINYINT(1) DEFAULT 1,
     erstellt DATETIME DEFAULT CURRENT_TIMESTAMP,
     aktualisiert DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_parent (parent_id),
     INDEX idx_kategorie (kategorie_id),
-    INDEX idx_artikelnr (artikelnr),
-    INDEX idx_aktiv (aktiv),
-    UNIQUE KEY uk_artikelnr (artikelnr)
+    INDEX idx_artikelnummer (artikelnummer),
+    INDEX idx_aktiv (aktiv)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
@@ -196,12 +197,41 @@ CREATE TABLE import_status (
     fehler_meldung TEXT DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- =====================================================
+-- VARIANTEN-GRUPPEN (z.B. "Tragfähigkeit", "Farbe")
+-- =====================================================
+DROP TABLE IF EXISTS varianten_gruppen;
+CREATE TABLE varianten_gruppen (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    sortierung INT DEFAULT 0,
+    INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- HINWEIS: Dieses Schema später erweitern um:
--- - produktbilder (mehrere Bilder pro Produkt)
--- - produktvarianten (Größen, Farben etc.)
--- - versandarten
--- - gutscheine
+-- VARIANTEN-WERTE (z.B. "500kg", "1000kg")
 -- =====================================================
+DROP TABLE IF EXISTS varianten_werte;
+CREATE TABLE varianten_werte (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    gruppe_id INT UNSIGNED NOT NULL,
+    wert VARCHAR(255) NOT NULL,
+    sortierung INT DEFAULT 0,
+    INDEX idx_gruppe (gruppe_id),
+    INDEX idx_wert (wert)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================
+-- PRODUKT-VARIANTEN (Verknüpft Variante mit Wert)
+-- =====================================================
+DROP TABLE IF EXISTS produkt_varianten;
+CREATE TABLE produkt_varianten (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    produkt_id INT UNSIGNED NOT NULL,
+    wert_id INT UNSIGNED NOT NULL,
+    INDEX idx_produkt (produkt_id),
+    INDEX idx_wert (wert_id),
+    UNIQUE KEY uk_produkt_wert (produkt_id, wert_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+SET FOREIGN_KEY_CHECKS = 1;
