@@ -14,6 +14,8 @@
             line-height: 1.6; 
             color: #333;
             min-height: 100vh;
+            background: url('sht_background.jpg') center center fixed;
+            background-size: cover;
         }
         
         /* Top Service Bar */
@@ -111,11 +113,9 @@
         
         /* Category Banner / Page Header */
         .category-banner {
-            background: linear-gradient(to right, #d6e3ed 0%, #d6e3ed 55%, transparent 55%), 
-                        url('sht_background.jpg') right center no-repeat;
-            background-size: auto, cover;
+            background: linear-gradient(135deg, #e8f0f7 0%, #d0e0ed 100%);
             position: relative;
-            min-height: 280px;
+            min-height: 200px;
             overflow: hidden;
         }
         .category-banner-content {
@@ -204,6 +204,7 @@
         }
         .main-content {
             padding: 1.5rem 0;
+            background: white;
         }
         
         /* Buttons */
