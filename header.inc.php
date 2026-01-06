@@ -209,10 +209,15 @@
             position: fixed;
             left: 0;
             top: 50%;
-            transform: translateY(-50%);
+            transform: translateY(-50%) translateX(-280px);
             z-index: 1000;
             display: flex;
             align-items: stretch;
+            transition: transform 0.3s ease;
+        }
+        
+        .kontakt-sidebar.open {
+            transform: translateY(-50%) translateX(0);
         }
         
         .kontakt-tab {
@@ -242,17 +247,7 @@
             width: 280px;
             padding: 1.5rem;
             box-shadow: 3px 0 15px rgba(0,0,0,0.15);
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
             border-radius: 0 8px 8px 0;
-        }
-        
-        .kontakt-sidebar.open .kontakt-panel {
-            transform: translateX(0);
-        }
-        
-        .kontakt-sidebar.open .kontakt-tab {
-            border-radius: 0;
         }
         
         .kontakt-panel h4 {
@@ -320,8 +315,11 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                transform: none;
+                transform: translateY(calc(100% - 40px));
                 flex-direction: column-reverse;
+            }
+            .kontakt-sidebar.open {
+                transform: translateY(0);
             }
             .kontakt-tab {
                 writing-mode: horizontal-tb;
@@ -330,11 +328,7 @@
             }
             .kontakt-panel {
                 width: 100%;
-                transform: translateY(100%);
                 border-radius: 8px 8px 0 0;
-            }
-            .kontakt-sidebar.open .kontakt-panel {
-                transform: translateY(0);
             }
         }
     </style>
