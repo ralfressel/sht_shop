@@ -203,9 +203,171 @@
             .page-header::after { width: 30%; opacity: 0.3; }
             .page-title { font-size: 1.3rem; }
         }
+        
+        /* Kontakt-Sidebar */
+        .kontakt-sidebar {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: stretch;
+        }
+        
+        .kontakt-tab {
+            background: linear-gradient(180deg, #004080 0%, #002855 100%);
+            color: white;
+            padding: 1rem 0.4rem;
+            cursor: pointer;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .kontakt-tab:hover {
+            background: linear-gradient(180deg, #0055a5 0%, #003366 100%);
+        }
+        
+        .kontakt-panel {
+            background: white;
+            width: 280px;
+            padding: 1.5rem;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.15);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .kontakt-sidebar.open .kontakt-panel {
+            transform: translateX(0);
+        }
+        
+        .kontakt-sidebar.open .kontakt-tab {
+            border-radius: 0;
+        }
+        
+        .kontakt-panel h4 {
+            color: #003366;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .kontakt-panel .kontakt-phone {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #003366;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .kontakt-panel .kontakt-email {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .kontakt-panel .kontakt-email a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        
+        .kontakt-panel .kontakt-email a:hover {
+            text-decoration: underline;
+        }
+        
+        .kontakt-panel .kontakt-whatsapp {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .kontakt-panel .kontakt-whatsapp a {
+            color: #25D366;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .kontakt-panel .kontakt-hours {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .kontakt-panel .kontakt-form-link {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .kontakt-panel .kontakt-form-link a {
+            color: #003366;
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .kontakt-sidebar {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                transform: none;
+                flex-direction: column-reverse;
+            }
+            .kontakt-tab {
+                writing-mode: horizontal-tb;
+                border-radius: 8px 8px 0 0;
+                padding: 0.5rem 1rem;
+            }
+            .kontakt-panel {
+                width: 100%;
+                transform: translateY(100%);
+                border-radius: 8px 8px 0 0;
+            }
+            .kontakt-sidebar.open .kontakt-panel {
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
+
+<!-- Kontakt-Sidebar -->
+<div class="kontakt-sidebar" id="kontaktSidebar">
+    <div class="kontakt-panel">
+        <h4>Unterstützung und Beratung unter:</h4>
+        <div class="kontakt-phone">03681 / 454266-20</div>
+        <div class="kontakt-email">
+            <a href="mailto:info@sht-hebezeuge.de">info@sht-hebezeuge.de</a>
+        </div>
+        <div class="kontakt-whatsapp">
+            <a href="https://wa.me/4936814542662" target="_blank">Whatsapp-Beratung</a>
+        </div>
+        <div class="kontakt-hours">
+            Mo-Do 06:30 - 16:00 Uhr<br>
+            Fr 6:30 - 12:00 Uhr
+        </div>
+        <div class="kontakt-form-link">
+            Oder über unser <a href="#">Kontaktformular</a>.
+        </div>
+    </div>
+    <div class="kontakt-tab" onclick="toggleKontakt()">Kontakt</div>
+</div>
+
+<script>
+function toggleKontakt() {
+    document.getElementById('kontaktSidebar').classList.toggle('open');
+}
+</script>
 
 <!-- Top Service Bar -->
 <div class="top-bar">
