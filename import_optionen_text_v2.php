@@ -65,8 +65,8 @@ echo "=== SCHRITT 3: Product-Option Verknüpfungen laden ===\n";
 $prod_opt_sql = file_get_contents($sql_dir . 'product_option.sql');
 
 $product_options = [];
-// Regex für: (0xPRODUCT_UUID, 0xOPTION_UUID)
-preg_match_all("/\(0x([a-f0-9]{32}),\s*0x([a-f0-9]{32})\)/i", $prod_opt_sql, $matches, PREG_SET_ORDER);
+// Regex für: (0xPRODUCT_UUID, 0xVERSION_UUID, 0xOPTION_UUID) - 3 Spalten!
+preg_match_all("/\(0x([a-f0-9]+),\s*0x[a-f0-9]+,\s*0x([a-f0-9]+)\)/i", $prod_opt_sql, $matches, PREG_SET_ORDER);
 
 foreach ($matches as $m) {
     $product_uuid = strtolower($m[1]);
